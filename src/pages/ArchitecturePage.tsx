@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { getArchitecture } from '../data/architectures'
 import { CATEGORY_LABEL } from '../data/categories'
-import { LENSES, tierFor, TIER_COLOR } from '../data/ratings'
+import { LENSES, tierFor, tierColor } from '../data/ratings'
 import { StepPlayer } from '../components/StepPlayer'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -62,19 +62,14 @@ export function ArchitecturePage() {
               <dl className="flex flex-col gap-2 text-sm">
                 {LENSES.map((l) => {
                   const tier = tierFor(arch.slug, l.id)
+                  const c = tierColor(l.id, tier)
                   return (
                     <div key={l.id} className="flex items-center justify-between gap-2">
                       <dt className="text-ink-faint" title={l.blurb}>
                         {l.legendTitle}
                       </dt>
-                      <dd
-                        className="flex items-center gap-1.5 font-medium"
-                        style={{ color: TIER_COLOR[tier] }}
-                      >
-                        <span
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ background: TIER_COLOR[tier] }}
-                        />
+                      <dd className="flex items-center gap-1.5 font-medium" style={{ color: c }}>
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />
                         {l.tiers[tier]}
                       </dd>
                     </div>

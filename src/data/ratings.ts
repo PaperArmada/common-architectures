@@ -50,8 +50,28 @@ export const LENS_BY_ID: Record<Lens, LensMeta> = Object.fromEntries(
   LENSES.map((l) => [l.id, l]),
 ) as Record<Lens, LensMeta>
 
-/** Tier colors, shared across lenses (0 = green, 1 = indigo, 2 = pink). */
-export const TIER_COLOR: [string, string, string] = ['#34d399', '#818cf8', '#f472b6']
+/**
+ * Colors run from the "approachable/foundational" end (green) to the
+ * "demanding/edge" end (pink), indexed by severity — NOT raw tier.
+ */
+export const SEVERITY_COLOR: [string, string, string] = ['#34d399', '#818cf8', '#f472b6']
+
+/** @deprecated use severity()/tierColor(). Kept for any direct tier indexing. */
+export const TIER_COLOR = SEVERITY_COLOR
+
+/**
+ * Map a tier to its "severity" (0 = approachable, 2 = edge) for the given lens.
+ * For difficulty lenses severity == tier. For prevalence it inverts, so that
+ * Ubiquitous is the green/foundational end and Niche is the pink/edge end.
+ */
+export function severity(lens: Lens, tier: Tier): Tier {
+  return (lens === 'prevalence' ? 2 - tier : tier) as Tier
+}
+
+/** Color for a tier under a lens (green = approachable end, pink = edge). */
+export function tierColor(lens: Lens, tier: Tier): string {
+  return SEVERITY_COLOR[severity(lens, tier)]
+}
 
 /**
  * Ratings per architecture. Conceptual mirrors each architecture's `level`;

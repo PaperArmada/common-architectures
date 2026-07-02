@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CATEGORIES } from '../../data/categories'
 import { architecturesByCategory } from '../../data/architectures'
-import { LENS_BY_ID, tierFor, TIER_COLOR } from '../../data/ratings'
+import { LENS_BY_ID, tierFor, tierColor, severity } from '../../data/ratings'
 import { useLens } from '../../context/LensContext'
 import { LensToggle } from './LensToggle'
 
@@ -22,22 +22,25 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="flex flex-col gap-2.5">
         <LensToggle />
-        {/* Legend sits directly under the selector, keyed to the active lens. */}
+        {/* Legend sits directly under the selector, ordered green → pink (approachable → edge). */}
         <div className="flex flex-wrap gap-x-3 gap-y-1 px-1 text-[11px] text-ink-soft">
-          {lensMeta.tiers.map((label, tier) => (
-            <span key={label} className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: TIER_COLOR[tier] }} />
-              {label}
-            </span>
-          ))}
+          {([0, 1, 2] as const).map((s) => {
+            const tier = (lens === 'prevalence' ? 2 - s : s) as 0 | 1 | 2
+            return (
+              <span key={s} className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: tierColor(lens, tier) }} />
+                {lensMeta.tiers[tier]}
+              </span>
+            )
+          })}
         </div>
       </div>
 
       <div className="flex flex-col gap-5">
         {CATEGORIES.map((cat) => {
-          // Climb: order concepts ascending by the active lens's tier (stable within a tier).
+          // Climb: order concepts green → pink (approachable → edge) for the active lens.
           const items = [...architecturesByCategory(cat.id)].sort(
-            (a, b) => tierFor(a.slug, lens) - tierFor(b.slug, lens),
+            (a, b) => severity(lens, tierFor(a.slug, lens)) - severity(lens, tierFor(b.slug, lens)),
           )
           return (
             <div key={cat.id}>
@@ -64,7 +67,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                     >
                       <span
                         className="h-1.5 w-1.5 flex-none rounded-full transition-colors"
-                        style={{ background: TIER_COLOR[tierFor(a.slug, lens)] }}
+                        style={{ background: tierColor(lens, tierFor(a.slug, lens)) }}
                       />
                       {a.title}
                     </NavLink>

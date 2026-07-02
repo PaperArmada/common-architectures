@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { CATEGORIES } from '../data/categories'
 import { architecturesByCategory } from '../data/architectures'
 import { NodeIcon, NODE_STYLES } from '../components/diagram/nodeStyles'
-import { LENS_BY_ID, tierFor, TIER_COLOR } from '../data/ratings'
+import { LENS_BY_ID, tierFor, tierColor, severity } from '../data/ratings'
 import { useLens } from '../context/LensContext'
 import type { Architecture } from '../types'
 
@@ -33,9 +33,9 @@ export function HomePage() {
 
       <div className="flex flex-col gap-10">
         {CATEGORIES.map((cat) => {
-          // Climb: order ascending by the active lens's tier (stable within a tier).
+          // Climb: order green → pink (approachable → edge) for the active lens.
           const items = [...architecturesByCategory(cat.id)].sort(
-            (a, b) => tierFor(a.slug, lens) - tierFor(b.slug, lens),
+            (a, b) => severity(lens, tierFor(a.slug, lens)) - severity(lens, tierFor(b.slug, lens)),
           )
           return (
             <section key={cat.id}>
@@ -67,7 +67,7 @@ function ArchCard({ arch }: { arch: Architecture }) {
   const { lens } = useLens()
   const tier = tierFor(arch.slug, lens)
   const tierLabel = LENS_BY_ID[lens].tiers[tier]
-  const tierColor = TIER_COLOR[tier]
+  const badgeColor = tierColor(lens, tier)
   return (
     <motion.div
       layout
@@ -93,9 +93,9 @@ function ArchCard({ arch }: { arch: Architecture }) {
           })}
           <span
             className="ml-auto flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide"
-            style={{ color: tierColor }}
+            style={{ color: badgeColor }}
           >
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: tierColor }} />
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: badgeColor }} />
             {tierLabel}
           </span>
         </div>
