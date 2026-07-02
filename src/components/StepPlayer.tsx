@@ -36,6 +36,9 @@ export function StepPlayer({ arch }: { arch: Architecture }) {
   // Keyboard nav
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Don't hijack keys while the user is typing (search, feedback, etc.).
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
       if (e.key === 'ArrowRight') go(index + 1)
       else if (e.key === 'ArrowLeft') go(index - 1)
       else if (e.key === ' ') {
@@ -146,18 +149,17 @@ export function StepPlayer({ arch }: { arch: Architecture }) {
               {arch.title}
             </span>
           </div>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.28 }}
-            >
-              <h3 className="mt-3 text-lg font-bold leading-snug text-ink">{step.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.description}</p>
-            </motion.div>
-          </AnimatePresence>
+          {/* Keyed fade-in (no exit phase): new text appears immediately, so rapid
+              stepping can never leave the panel blank mid-transition. */}
+          <motion.div
+            key={step.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.24 }}
+          >
+            <h3 className="mt-3 text-lg font-bold leading-snug text-ink">{step.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.description}</p>
+          </motion.div>
         </div>
       </div>
     </div>

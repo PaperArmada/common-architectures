@@ -6,7 +6,13 @@ import { LENS_BY_ID, tierFor, tierColor, severity } from '../../data/ratings'
 import { useLens } from '../../context/LensContext'
 import { LensToggle } from './LensToggle'
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  onNavigate,
+  onSearch,
+}: {
+  onNavigate?: () => void
+  onSearch?: () => void
+}) {
   const { lens } = useLens()
   const lensMeta = LENS_BY_ID[lens]
 
@@ -19,6 +25,20 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="text-[11px] leading-tight text-ink-faint">a visual systems-design guide</div>
         </div>
       </NavLink>
+
+      {onSearch && (
+        <button
+          onClick={onSearch}
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface px-2.5 py-2 text-[12.5px] text-ink-faint transition hover:border-border-strong hover:text-ink-soft"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="rounded border border-border bg-surface-2 px-1 font-mono text-[10px]">⌘K</kbd>
+        </button>
+      )}
 
       <div className="flex flex-col gap-2.5">
         <LensToggle />

@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { getArchitecture } from '../data/architectures'
 import { CATEGORY_LABEL } from '../data/categories'
 import { LENSES, tierFor, tierColor } from '../data/ratings'
+import { RELATED } from '../data/related'
+import { useLens } from '../context/LensContext'
 import { StepPlayer } from '../components/StepPlayer'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -80,6 +82,47 @@ export function ArchitecturePage() {
           </div>
         </aside>
       </div>
+
+      <RelatedPatterns slug={arch.slug} />
     </motion.article>
+  )
+}
+
+/** Curated neighbors — complements, contrasts, prerequisites. */
+function RelatedPatterns({ slug }: { slug: string }) {
+  const { lens } = useLens()
+  const related = (RELATED[slug] ?? [])
+    .map((s) => getArchitecture(s))
+    .filter((a): a is NonNullable<typeof a> => Boolean(a))
+  if (related.length === 0) return null
+  return (
+    <section className="mt-10 border-t border-border pt-6">
+      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
+        Related patterns
+      </h2>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {related.map((a) => {
+          const tier = tierFor(a.slug, lens)
+          return (
+            <Link
+              key={a.slug}
+              to={`/a/${a.slug}`}
+              className="group rounded-xl border border-border bg-surface/60 px-4 py-3 transition hover:border-border-strong"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-1.5 w-1.5 flex-none rounded-full"
+                  style={{ background: tierColor(lens, tier) }}
+                />
+                <span className="text-[13.5px] font-semibold text-ink group-hover:text-white">
+                  {a.title}
+                </span>
+              </div>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-soft">{a.tagline}</p>
+            </Link>
+          )
+        })}
+      </div>
+    </section>
   )
 }
