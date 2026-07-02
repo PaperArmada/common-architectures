@@ -40,7 +40,7 @@ export function ArchitecturePage() {
           <Content />
         </div>
         <aside className="order-first lg:order-none">
-          <div className="sticky top-6 rounded-2xl border border-border bg-surface/60 p-4">
+          <div className="rounded-2xl border border-border bg-surface/60 p-4 lg:sticky lg:top-6">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
               At a glance
             </div>

@@ -44,7 +44,7 @@ export default function App() {
           <span className="text-sm font-bold text-ink">Common Architectures</span>
         </header>
 
-        <main className="min-w-0 flex-1 px-5 py-7 sm:px-8 lg:px-10">
+        <main className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-8 sm:pb-10 sm:pt-7 lg:px-10">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/a/:slug" element={<ArchitecturePage />} />

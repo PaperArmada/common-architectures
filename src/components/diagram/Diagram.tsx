@@ -19,15 +19,29 @@ export function Diagram({ nodes, edges, step, stepKey, accent }: DiagramProps) {
   const { ref, size } = useSize<HTMLDivElement>()
   const byId = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
-  const center = (id: string) => {
-    const n = byId.get(id)
-    if (!n) return { x: 0, y: 0 }
-    return { x: (n.x / 100) * size.width, y: (n.y / 100) * size.height }
-  }
-
   const activeNodes = new Set(step.activeNodes ?? [])
   const failedNodes = new Set(step.failedNodes ?? [])
   const activeEdges = new Set(step.activeEdges ?? [])
+
+  // On narrow canvases (phones), shrink nodes so columns don't overlap or overflow.
+  const compact = size.width > 0 && size.width < 480
+  const nodeWidth = (n: DiagramNode) =>
+    compact ? Math.max(70, Math.round(size.width * 0.24)) : (n.width ?? 128)
+  const nodeHalfH = compact ? 30 : 40
+
+  // Node center in px, clamped so the whole node stays inside the canvas
+  // (edge nodes near 0%/100% would otherwise clip on small screens).
+  const centerNode = (n: DiagramNode) => {
+    const halfW = nodeWidth(n) / 2 + 4
+    const x = Math.min(Math.max((n.x / 100) * size.width, halfW), size.width - halfW)
+    const y = Math.min(Math.max((n.y / 100) * size.height, nodeHalfH + 4), size.height - nodeHalfH - 4)
+    return { x, y }
+  }
+  const center = (id: string) => {
+    const n = byId.get(id)
+    if (!n) return { x: 0, y: 0 }
+    return centerNode(n)
+  }
 
   return (
     <div
@@ -128,15 +142,25 @@ export function Diagram({ nodes, edges, step, stepKey, accent }: DiagramProps) {
       )}
 
       {/* nodes */}
-      {nodes.map((n) => (
-        <Node
-          key={n.id}
-          node={n}
-          active={activeNodes.has(n.id)}
-          failed={failedNodes.has(n.id)}
-          accent={accent}
-        />
-      ))}
+      {nodes.map((n) => {
+        const pos =
+          size.width > 0
+            ? { left: centerNode(n).x, top: centerNode(n).y }
+            : { left: `${n.x}%`, top: `${n.y}%` }
+        return (
+          <Node
+            key={n.id}
+            node={n}
+            active={activeNodes.has(n.id)}
+            failed={failedNodes.has(n.id)}
+            accent={accent}
+            compact={compact}
+            width={nodeWidth(n)}
+            left={pos.left}
+            top={pos.top}
+          />
+        )
+      })}
     </div>
   )
 }
@@ -146,11 +170,19 @@ function Node({
   active,
   failed,
   accent,
+  compact,
+  width,
+  left,
+  top,
 }: {
   node: DiagramNode
   active: boolean
   failed: boolean
   accent: string
+  compact: boolean
+  width: number
+  left: number | string
+  top: number | string
 }) {
   const style = NODE_STYLES[node.kind]
   const color = failed ? 'var(--color-danger)' : style.color
@@ -158,7 +190,7 @@ function Node({
   return (
     <motion.div
       className="absolute z-10 -translate-x-1/2 -translate-y-1/2 select-none"
-      style={{ left: `${node.x}%`, top: `${node.y}%`, width: node.width ?? 128 }}
+      style={{ left, top, width }}
       initial={false}
       animate={{ scale: active ? 1.04 : 1, opacity: failed ? 0.55 : 1 }}
       transition={{ type: 'spring', stiffness: 260, damping: 22 }}
@@ -172,25 +204,35 @@ function Node({
         />
       )}
       <div
-        className="relative flex flex-col items-center gap-1.5 rounded-xl border bg-surface/90 px-3 py-2.5 backdrop-blur"
+        className={`relative flex flex-col items-center rounded-xl border bg-surface/90 backdrop-blur ${
+          compact ? 'gap-1 px-1.5 py-1.5' : 'gap-1.5 px-3 py-2.5'
+        }`}
         style={{
           borderColor: failed ? 'var(--color-danger)' : active ? color : 'var(--color-border)',
         }}
       >
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
+          className={`flex items-center justify-center rounded-lg ${compact ? 'h-6 w-6' : 'h-9 w-9'}`}
           style={{ color, background: `${hexish(color)}1a`, border: `1px solid ${hexish(color)}33` }}
         >
-          <NodeIcon kind={node.kind} />
+          <NodeIcon kind={node.kind} size={compact ? 15 : 22} />
         </div>
         <div className="text-center">
-          <div className="text-[12.5px] font-semibold leading-tight text-ink">{node.label}</div>
-          {node.sublabel && (
+          <div
+            className={`font-semibold leading-tight text-ink ${compact ? 'text-[10px]' : 'text-[12.5px]'}`}
+          >
+            {node.label}
+          </div>
+          {node.sublabel && !compact && (
             <div className="mt-0.5 font-mono text-[9.5px] leading-tight text-ink-faint">{node.sublabel}</div>
           )}
         </div>
         {failed && (
-          <span className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-canvas">
+          <span
+            className={`absolute flex items-center justify-center rounded-full bg-danger font-bold text-canvas ${
+              compact ? '-right-1 -top-1 h-3 w-3 text-[8px]' : '-right-1.5 -top-1.5 h-4 w-4 text-[10px]'
+            }`}
+          >
             ✕
           </span>
         )}

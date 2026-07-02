@@ -54,7 +54,7 @@ export function StepPlayer({ arch }: { arch: Architecture }) {
     <div className="flex flex-col gap-4 lg:flex-row lg:gap-5">
       {/* Stage */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="relative aspect-[16/10] w-full sm:aspect-[16/9]">
+        <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
           <Diagram
             nodes={arch.nodes}
             edges={arch.edges}
@@ -83,7 +83,7 @@ export function StepPlayer({ arch }: { arch: Architecture }) {
         </div>
 
         {/* Transport controls */}
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
             onClick={() => go(index - 1)}
             disabled={index === 0}
@@ -137,7 +137,7 @@ export function StepPlayer({ arch }: { arch: Architecture }) {
 
       {/* Narration */}
       <div className="lg:w-[340px] lg:flex-none">
-        <div className="sticky top-6 rounded-2xl border border-border bg-surface/70 p-5">
+        <div className="rounded-2xl border border-border bg-surface/70 p-5 lg:sticky lg:top-6">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-ink-faint">
               Step {index + 1} / {steps.length}

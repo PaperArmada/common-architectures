@@ -26,10 +26,10 @@ export const NODE_STYLES: Record<NodeKind, NodeStyle> = {
 }
 
 /** Compact stroke icons keyed by node kind. Rendered inside a 24×24 box. */
-export function NodeIcon({ kind }: { kind: NodeKind }) {
+export function NodeIcon({ kind, size = 22 }: { kind: NodeKind; size?: number }) {
   const common = {
-    width: 22,
-    height: 22,
+    width: size,
+    height: size,
     viewBox: '0 0 24 24',
     fill: 'none',
     stroke: 'currentColor',

@@ -72,16 +72,19 @@ export const RATINGS: Record<string, Record<Lens, Tier>> = {
   'message-queue': { conceptual: 0, operational: 1, prevalence: 2 },
   'pub-sub': { conceptual: 1, operational: 1, prevalence: 1 },
   'event-driven': { conceptual: 2, operational: 2, prevalence: 1 }, // hard to trace
-  'stream-processing': { conceptual: 2, operational: 2, prevalence: 1 },
+  'stream-processing': { conceptual: 2, operational: 2, prevalence: 0 }, // specialized data infra, not most apps
   // Distributed patterns
-  microservices: { conceptual: 1, operational: 2, prevalence: 1 }, // the ops tax
+  // Advanced to understand: it composes gateway, discovery, per-service data, and network-failure reasoning.
+  microservices: { conceptual: 2, operational: 2, prevalence: 1 },
   'circuit-breaker': { conceptual: 1, operational: 1, prevalence: 1 },
   'rate-limiting': { conceptual: 1, operational: 1, prevalence: 1 },
   'leader-election': { conceptual: 2, operational: 2, prevalence: 0 }, // usually inside infra you use
   // Gap-fillers
   'reverse-proxy': { conceptual: 0, operational: 1, prevalence: 2 },
-  websockets: { conceptual: 1, operational: 1, prevalence: 1 }, // stateful conns to scale
-  'consistent-hashing': { conceptual: 2, operational: 1, prevalence: 1 },
+  // Heavy ops: long-lived stateful connections, sticky-aware routing, shared pub/sub to broadcast across nodes.
+  websockets: { conceptual: 1, operational: 2, prevalence: 1 },
+  // Niche in practice: usually embedded inside a cache/DB/LB rather than something you apply directly.
+  'consistent-hashing': { conceptual: 2, operational: 1, prevalence: 0 },
   'service-discovery': { conceptual: 1, operational: 1, prevalence: 1 },
   saga: { conceptual: 2, operational: 2, prevalence: 0 },
   // Deployment & delivery
