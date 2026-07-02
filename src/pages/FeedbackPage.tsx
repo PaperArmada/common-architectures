@@ -67,11 +67,13 @@ export function FeedbackPage() {
       </p>
 
       <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[13px] text-ink-soft">
-        <strong className="text-ink">Stored in this browser only.</strong> This aggregator keeps
-        comments in <code className="rounded bg-surface-2 px-1 font-mono text-[11px]">localStorage</code>,
-        so it captures notes from <em>this</em> device — perfect for your own review pass, but it can’t
-        gather other visitors’ feedback onto one place without a backend. To collect from everyone, wire
-        the widget to a hosted form endpoint or prefilled GitHub issues (ask and I’ll add it).
+        <strong className="text-ink">This list is browser-local.</strong> It mirrors every note into{' '}
+        <code className="rounded bg-surface-2 px-1 font-mono text-[11px]">localStorage</code> on{' '}
+        <em>this</em> device — handy for your own review pass. To actually receive feedback from other
+        visitors, the widget also offers two delivery paths: <strong className="text-ink">Open a GitHub
+        issue</strong> (works now) and a <strong className="text-ink">quick form</strong> that POSTs to a
+        hosted endpoint once you set <code className="rounded bg-surface-2 px-1 font-mono text-[11px]">FEEDBACK_ENDPOINT</code>{' '}
+        (Formspree/Tally/Basin) in <code className="rounded bg-surface-2 px-1 font-mono text-[11px]">src/config.ts</code>.
       </div>
 
       {list.length > 0 && (
