@@ -3,7 +3,9 @@ import { Route, Routes } from 'react-router-dom'
 import { Sidebar } from './components/layout/Sidebar'
 import { HomePage } from './pages/HomePage'
 import { ArchitecturePage } from './pages/ArchitecturePage'
+import { FeedbackPage } from './pages/FeedbackPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { FeedbackWidget } from './components/FeedbackWidget'
 import { LensProvider } from './context/LensContext'
 
 export default function App() {
@@ -46,10 +48,12 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/a/:slug" element={<ArchitecturePage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
       </div>
+      <FeedbackWidget />
     </div>
     </LensProvider>
   )

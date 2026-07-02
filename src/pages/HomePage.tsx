@@ -8,6 +8,7 @@ import { useLens } from '../context/LensContext'
 import type { Architecture } from '../types'
 
 export function HomePage() {
+  const { lens } = useLens()
   return (
     <div className="mx-auto max-w-4xl">
       <motion.section
@@ -32,7 +33,10 @@ export function HomePage() {
 
       <div className="flex flex-col gap-10">
         {CATEGORIES.map((cat) => {
-          const items = architecturesByCategory(cat.id)
+          // Climb: order ascending by the active lens's tier (stable within a tier).
+          const items = [...architecturesByCategory(cat.id)].sort(
+            (a, b) => tierFor(a.slug, lens) - tierFor(b.slug, lens),
+          )
           return (
             <section key={cat.id}>
               <div className="mb-1 flex items-baseline gap-3">
@@ -65,7 +69,11 @@ function ArchCard({ arch }: { arch: Architecture }) {
   const tierLabel = LENS_BY_ID[lens].tiers[tier]
   const tierColor = TIER_COLOR[tier]
   return (
-    <motion.div whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
+    <motion.div
+      layout
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+    >
       <Link
         to={`/a/${arch.slug}`}
         className="group flex h-full flex-col rounded-2xl border border-border bg-surface/60 p-5 transition hover:border-border-strong"
