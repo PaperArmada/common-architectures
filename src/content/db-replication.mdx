@@ -1,0 +1,44 @@
+## The problem it solves
+
+Most applications read far more than they write. A single database eventually
+becomes the bottleneck: every query, read or write, competes for the same
+machine. **Replication** copies the data onto additional servers so that reads
+can be spread across many machines, and so the data survives the loss of any one
+of them.
+
+## How it works (leader / follower)
+
+- One node is the **primary** (leader). All **writes** go there.
+- Each **replica** (follower) keeps an open connection to the primary and
+  continuously applies its change log, staying a near-live copy of the data.
+- **Reads** can be served by any replica, multiplying read throughput as you add
+  followers.
+
+## Replication lag & consistency
+
+Replicas apply changes a moment after the primary commits them, so a read issued
+immediately after a write may hit a replica that hasn't caught up — returning a
+slightly **stale** value. This is **eventual consistency**.
+
+- For most reads (feeds, listings, search) a little staleness is fine.
+- When a user must see their own write immediately (**read-your-writes**), route
+  that read to the primary, or pin it to a replica known to be caught up.
+
+## Failover
+
+If the primary fails, a replica is **promoted** to become the new primary and
+writes resume against it. This can be manual or automatic; automatic failover
+must guard against **split-brain**, where two nodes both believe they are the
+primary.
+
+## Trade-offs
+
+- **Scales reads** and adds **redundancy** almost for free.
+- Does **not** scale writes — every write still lands on one primary. When writes
+  become the bottleneck, reach for **sharding** (partitioning the data) instead.
+- Introduces **lag** and the consistency questions that come with it.
+
+## Where you'll see it
+
+PostgreSQL streaming replication, MySQL primary/replica, and the read-replica
+features of managed databases like Amazon RDS and Cloud SQL.

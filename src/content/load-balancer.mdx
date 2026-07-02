@@ -1,0 +1,40 @@
+## The problem it solves
+
+A single server has a ceiling: finite CPU, memory, and open connections. Once
+traffic outgrows one machine, you need several — but clients only know one
+address. A **load balancer** sits in front of a pool of identical servers and
+spreads incoming requests across them, so the pool behaves like one very large
+server.
+
+## How it works
+
+- Clients connect to the load balancer's address, not to any individual server.
+- For each request, the balancer picks a backend using a **distribution policy**
+  and forwards the request, then relays the response back.
+- It continuously runs **health checks**. When a backend stops responding, it is
+  pulled from rotation and traffic flows only to healthy nodes.
+
+## Common distribution policies
+
+- **Round-robin** — hand requests to each server in turn. Simple and fair when
+  requests cost about the same.
+- **Least connections** — send the next request to whichever server has the
+  fewest in-flight requests. Better when request durations vary.
+- **IP hash / sticky sessions** — route a given client to the same server, useful
+  when session state lives on the node (though externalizing state is usually
+  cleaner).
+
+## Trade-offs
+
+- **Removes the single-server bottleneck** and lets you add or remove capacity
+  without changing the client-facing address.
+- **The balancer itself must not become a single point of failure** — production
+  setups run it in a redundant pair (or use a managed L4/L7 balancer).
+- Works best when backends are **stateless**, so any server can handle any
+  request. Push session state into a shared cache or database.
+
+## Where you'll see it
+
+Layer 4 (TCP) balancers like HAProxy and cloud network load balancers; Layer 7
+(HTTP) balancers like NGINX, Envoy, and application load balancers that can route
+on path or header.
