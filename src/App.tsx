@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar'
 import { HomePage } from './pages/HomePage'
 import { ArchitecturePage } from './pages/ArchitecturePage'
 import { FeedbackPage } from './pages/FeedbackPage'
+import { GlossaryPage } from './pages/GlossaryPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { FeedbackWidget } from './components/FeedbackWidget'
 import { LensProvider } from './context/LensContext'
@@ -48,6 +49,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/a/:slug" element={<ArchitecturePage />} />
+            <Route path="/glossary" element={<GlossaryPage />} />
             <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

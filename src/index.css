@@ -126,3 +126,31 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Glossary auto-links: subtle dotted underline, so prose stays readable. */
+.prose-arch a.gloss-term {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted var(--color-border-strong);
+  cursor: help;
+  transition: color 0.15s, border-color 0.15s;
+}
+.prose-arch a.gloss-term:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+/* Brief highlight when you land on a glossary entry via a #hash link. */
+@keyframes gloss-flash {
+  0% {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 0 22px 2px rgba(129, 140, 248, 0.35);
+  }
+  100% {
+    border-color: var(--color-border);
+    box-shadow: none;
+  }
+}
+.gloss-flash {
+  animation: gloss-flash 1.6s ease-out;
+}

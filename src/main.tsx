@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { MDXProvider } from '@mdx-js/react'
 import App from './App'
+import { mdxComponents } from './components/mdxComponents'
 import './index.css'
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '')
@@ -10,7 +11,7 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '')
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter basename={basename}>
-      <MDXProvider>
+      <MDXProvider components={mdxComponents}>
         <App />
       </MDXProvider>
     </BrowserRouter>

@@ -9,6 +9,7 @@ import { FEEDBACK_ENDPOINT, GITHUB_REPO } from '../config'
 function pageLabel(pathname: string): string {
   if (pathname === '/') return 'Home'
   if (pathname === '/feedback') return 'Feedback inbox'
+  if (pathname === '/glossary') return 'Glossary'
   const m = pathname.match(/^\/a\/(.+)$/)
   if (m) return getArchitecture(m[1])?.title ?? m[1]
   return pathname
