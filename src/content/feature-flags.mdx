@@ -1,0 +1,39 @@
+## The problem it solves
+
+Deploying code and releasing a feature are usually the same event — which is scary,
+because turning a feature on means shipping it, and turning it off means an
+emergency rollback. **Feature flags** (feature toggles) separate the two: code ships
+**dark** behind a runtime switch, and you decide **later**, without a deploy, who
+sees it and when.
+
+## How it works
+
+- A feature is wrapped in a conditional: `if (flags.isEnabled("new-checkout", user))`.
+  The new path ships to production **off**.
+- A **flag service** evaluates each flag at runtime, per request, against
+  **targeting rules** — enable for internal users, then 5% of traffic, then a
+  region, then everyone.
+- Flip a flag in a dashboard and the change takes effect **immediately**, with no
+  deployment. If something breaks, flip it back — an instant kill switch, no
+  rollback.
+
+## What it unlocks
+
+- **Progressive delivery** — ramp a feature 1% → 100%, watching metrics (this is
+  how a **canary** is often driven at the application layer).
+- **A/B testing** — show variants to different cohorts and measure.
+- **Trunk-based development** — merge unfinished work safely behind an off flag,
+  avoiding long-lived branches.
+
+## Trade-offs
+
+- **Decouples deploy from release**, enables gradual rollout, and gives an instant
+  kill switch.
+- Every flag is a branch in your code. Left uncleaned, they become **flag debt** —
+  a tangle of stale conditionals. The flag service is also in the hot path, so it
+  needs caching and a sensible **default** when it's unreachable.
+
+## Where you'll see it
+
+LaunchDarkly, Flagsmith, Unleash, and OpenFeature — plus homegrown flags in a
+config service or database.

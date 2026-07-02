@@ -1,0 +1,39 @@
+## The problem it solves
+
+You have a large, aging monolith that's risky to change — but a "big bang" rewrite,
+where you build a replacement for a year and switch over in one terrifying weekend,
+almost always fails. The **strangler fig** pattern offers a safer path: grow the new
+system **around** the old one and migrate piece by piece, keeping everything running
+the whole time. It's named after the vine that gradually envelops a tree until it
+can stand on its own.
+
+## How it works
+
+- Put a **facade** — a proxy or gateway — in front of the monolith. At first it
+  routes **100% of traffic straight through** to the old system. Nothing changes for
+  users.
+- **Peel off one capability at a time.** Build, say, "search" as a new service, then
+  flip the facade so requests for `/search` go to the new service while everything
+  else still hits the monolith.
+- **Repeat**, capability by capability. The monolith shrinks as the new system
+  grows, until the last route is migrated and the old system can be **retired**.
+
+## Why it works
+
+- Each step is **small and reversible** — if a migrated slice misbehaves, point the
+  facade back at the monolith. No weekend-long cutover, no all-or-nothing risk.
+- Value ships continuously instead of after a multi-year rewrite, and you learn the
+  real boundaries as you go.
+
+## Trade-offs
+
+- **Low-risk, incremental, always-shippable** migration — the antidote to the doomed
+  big-bang rewrite.
+- You run **two systems at once** for a long time, and during that window **data and
+  state** often have to be shared or kept in sync between old and new — usually the
+  hardest part. The facade must stay reliable throughout.
+
+## Where you'll see it
+
+Monolith-to-microservices migrations everywhere, fronted by an API gateway, reverse
+proxy, or ingress doing the incremental routing.

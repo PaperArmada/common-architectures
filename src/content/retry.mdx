@@ -1,0 +1,38 @@
+## The problem it solves
+
+Networks blip. A dependency hiccups for 50ms, a connection resets, a node
+restarts. Many of these failures are **transient** — the same request would
+succeed if you just tried again a moment later. A **retry** policy turns those
+momentary failures into successes automatically, instead of surfacing an error to
+the user.
+
+## Doing it safely
+
+Naive retries are dangerous. If a dependency is struggling and every caller
+instantly retries, you pile *more* load onto it exactly when it's weakest — a
+**retry storm** that turns a blip into an outage. Two rules tame this:
+
+- **Exponential backoff** — wait longer between each attempt (100ms, 200ms,
+  400ms…), giving the dependency room to recover instead of hammering it.
+- **Jitter** — add randomness to each delay so thousands of clients don't retry in
+  lockstep. Without jitter, backoff just synchronizes the herd into waves.
+
+## Know when *not* to retry
+
+- Only retry **transient** failures (timeouts, 503s, connection resets). Retrying a
+  400 or a validation error just wastes time — it'll fail every time.
+- Cap attempts with a **retry budget** or deadline, then give up and fail cleanly.
+- The operation must be **idempotent** — retried writes can otherwise double-charge
+  or duplicate. (See the Idempotency Keys walkthrough.)
+
+## Trade-offs
+
+- **Absorbs transient failures** transparently and improves perceived reliability.
+- Done carelessly, retries **amplify** load and hide real problems. Pair them with
+  **timeouts** and a **circuit breaker** so you stop retrying a dependency that's
+  genuinely down.
+
+## Where you'll see it
+
+Retry logic in every serious HTTP/gRPC client and SDK, resilience libraries
+(Polly, Resilience4j), and the "AWS full jitter" backoff algorithm.

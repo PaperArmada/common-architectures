@@ -1,0 +1,40 @@
+## The problem it solves
+
+Replicate data across N nodes and you face a dilemma: wait for **all** replicas to
+confirm a write and you're slow and fragile (one slow node stalls everything); ask
+just **one** and you might read stale data or lose a write when that node dies.
+**Quorum** consistency gives you a tunable dial between the two, by requiring only a
+**majority-ish overlap** rather than unanimity.
+
+## How it works
+
+Pick three numbers: **N** replicas, **W** nodes that must acknowledge a write, and
+**R** nodes that must respond to a read.
+
+- A write succeeds once **W** replicas confirm it. A read queries **R** replicas and
+  takes the newest value.
+- The key rule: if **W + R > N**, the read and write sets are **guaranteed to
+  overlap** by at least one node — so every read sees the latest committed write.
+  That's strong consistency without contacting every replica.
+
+## Tuning the dial
+
+- **W + R > N** → strong consistency. With N=3, `W=2, R=2` is the popular balance.
+- **W=N, R=1** → fast reads, slow/fragile writes. **W=1, R=N** → the reverse.
+- **W + R ≤ N** → fast but eventually consistent; reads may miss recent writes.
+
+Conflicts from concurrent writes are resolved with **version vectors** or
+**last-write-wins**, and lagging replicas are repaired in the background.
+
+## Trade-offs
+
+- **Tunable** consistency-vs-latency per workload, tolerant of node failures — no
+  single node has to be up for progress.
+- More moving parts than leader/follower, and `W+R>N` still can't prevent all
+  anomalies without careful conflict handling. It's an **availability-leaning**
+  point on the CAP spectrum.
+
+## Where you'll see it
+
+Amazon Dynamo and DynamoDB, Apache Cassandra, and Riak — the "Dynamo-style"
+family of quorum-replicated stores.

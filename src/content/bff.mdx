@@ -1,0 +1,39 @@
+## The problem it solves
+
+One backend serving a web app, an iOS app, and a smartwatch tries to please
+everyone and satisfies no one. The watch wants a tiny, trimmed payload; the web
+dashboard wants everything in one rich call; the phone is somewhere in between.
+Stuffing all of that into a single general-purpose API leads to over-fetching,
+chatty round-trips, and endpoints bloated with client-specific special cases. A
+**Backend for Frontend (BFF)** gives **each client its own dedicated backend**.
+
+## How it works
+
+- Each frontend has a BFF built and owned **for it** — a Web BFF, a Mobile BFF —
+  sitting between that client and the downstream services.
+- The BFF calls the shared services, then **aggregates and reshapes** the response
+  into exactly what its client needs: the right fields, the right shape, in one
+  round-trip.
+- Client-specific concerns (payload trimming, mobile-friendly auth, protocol
+  quirks) live in that client's BFF, keeping the downstream services **generic and
+  clean**.
+
+## BFF vs. a shared API gateway
+
+A single **API gateway** is one front door for everyone. A **BFF** is one front
+door *per client type*. You often see both: a gateway handles cross-cutting
+concerns (auth, rate limiting) while BFFs handle client-specific shaping. In fact a
+BFF is essentially "a gateway per experience."
+
+## Trade-offs
+
+- **Each client gets a tailored, efficient API**, and the frontend team can own and
+  evolve its BFF without waiting on backend teams.
+- **More services to build and run**, and a risk of **duplicated logic** across
+  BFFs. Best when clients genuinely diverge; overkill when they'd share one API
+  happily.
+
+## Where you'll see it
+
+Popularized at SoundCloud and Netflix; common in GraphQL/edge layers and any product
+with meaningfully different web and mobile clients.

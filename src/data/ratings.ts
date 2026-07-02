@@ -122,6 +122,22 @@ export const RATINGS: Record<string, Record<Lens, Tier>> = {
   oauth: { conceptual: 2, operational: 1, prevalence: 1 }, // intricate protocol
   mtls: { conceptual: 1, operational: 2, prevalence: 0 }, // cert lifecycle
   waf: { conceptual: 0, operational: 1, prevalence: 1 },
+  // Resilience
+  retry: { conceptual: 1, operational: 1, prevalence: 2 }, // jitter/retry-storm nuance; every client retries
+  bulkhead: { conceptual: 1, operational: 1, prevalence: 1 },
+  idempotency: { conceptual: 1, operational: 1, prevalence: 1 }, // subtle but core
+  // Data & consistency backbone
+  'event-sourcing': { conceptual: 2, operational: 2, prevalence: 0 },
+  'quorum-consensus': { conceptual: 2, operational: 1, prevalence: 0 }, // Dynamo/Cassandra
+  'two-phase-commit': { conceptual: 2, operational: 2, prevalence: 0 }, // blocking, niche/legacy
+  outbox: { conceptual: 1, operational: 1, prevalence: 1 },
+  // Edge & entry
+  dns: { conceptual: 1, operational: 1, prevalence: 2 }, // every request; anycast is the harder part
+  'object-storage': { conceptual: 0, operational: 1, prevalence: 2 },
+  bff: { conceptual: 1, operational: 1, prevalence: 1 },
+  // Delivery & migration
+  'feature-flags': { conceptual: 1, operational: 1, prevalence: 1 },
+  'strangler-fig': { conceptual: 1, operational: 2, prevalence: 1 }, // two systems in parallel
 }
 
 export function tierFor(slug: string, lens: Lens): Tier {

@@ -1,0 +1,40 @@
+## The problem it solves
+
+Every request starts with a name — `example.com` — but the network only routes to
+**IP addresses**. Something has to translate one to the other, before any load
+balancer, CDN, or server is involved. **DNS** (the Domain Name System) is that
+global lookup, and it's also a surprisingly powerful first point of control: where
+you *send* a user can depend on who and where they are.
+
+## How resolution works
+
+- The client asks a **resolver** for `example.com`. The resolver walks the
+  hierarchy — **root → top-level domain (.com) → authoritative** nameserver — to
+  find the answer, caching along the way.
+- The authoritative server returns **records**: an `A`/`AAAA` record (the IP), or a
+  `CNAME` (an alias to another name).
+- Results are cached for a **TTL**. Short TTLs let you change targets quickly;
+  long TTLs are faster but slow to update — which is why DNS changes "take time to
+  propagate."
+
+## DNS as a routing layer
+
+The answer doesn't have to be the same for everyone:
+
+- **GeoDNS** — return the IP of the region nearest the user, cutting latency.
+- **Latency / health-based routing** — hand back a healthy, fast endpoint and steer
+  around a failed region (a coarse failover mechanism).
+- **Anycast** — advertise **one IP from many locations** at the network layer, so
+  the internet itself routes each user to the closest instance. This is how CDNs
+  and big DNS providers put an entry point near everyone.
+
+## Trade-offs
+
+- **Global, cache-friendly, and a natural place** for geo-routing and failover.
+- **Caching cuts both ways**: TTLs mean changes and failovers aren't instant. DNS
+  is coarse-grained — it picks an endpoint, it doesn't balance individual requests.
+
+## Where you'll see it
+
+Route 53, Cloudflare, and NS1; Anycast behind virtually every CDN and public DNS
+resolver (like `8.8.8.8`).

@@ -1,0 +1,43 @@
+## The problem it solves
+
+One logical operation must update **two separate databases** — move money out of
+one bank's ledger and into another's — and it must be all-or-nothing across both.
+Neither database knows about the other's transaction, so a plain commit on each
+risks one succeeding and one failing, leaving money vanished or duplicated.
+**Two-phase commit (2PC)** coordinates multiple resources to commit atomically —
+the textbook distributed transaction.
+
+## How it works
+
+A **coordinator** drives all participants through two phases:
+
+1. **Prepare (voting).** The coordinator asks every participant "can you commit
+   this?" Each does the work tentatively, locks the rows, writes to its log, and
+   replies **Yes** (I'm ready and promise I can commit) or **No**.
+2. **Commit (or abort).** If **all** voted Yes, the coordinator tells everyone to
+   **commit**. If *any* said No — or didn't answer — it tells everyone to
+   **abort**. Participants obey and release their locks.
+
+Because everyone promised in phase 1, phase 2 can't fail on their end — that's what
+makes it atomic.
+
+## Why it's often avoided
+
+- It's **blocking**: participants hold locks from prepare until the final decision.
+  If the **coordinator crashes** after they voted Yes, they're stuck holding locks,
+  unsure whether to commit or abort — the notorious failure mode.
+- Locks + two round-trips make it **slow**, and it scales poorly.
+
+This is exactly why microservices reach for the **saga** pattern instead — trading
+strict atomicity for availability and eventual consistency.
+
+## Trade-offs
+
+- **True cross-resource atomicity** when you genuinely need it.
+- **Blocking, coordinator-dependent, and slow** — a poor fit for high-scale or
+  loosely-coupled systems.
+
+## Where you'll see it
+
+The `XA` transaction standard, distributed transaction managers, and some
+databases/message brokers — increasingly replaced by sagas and idempotent designs.

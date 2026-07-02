@@ -1,0 +1,39 @@
+## The problem it solves
+
+Named after the watertight compartments that stop a breached ship from flooding
+end to end, the **bulkhead** pattern isolates parts of a system so a failure in one
+can't sink the whole. The classic trigger: one slow dependency ties up **every**
+worker thread or connection in a shared pool, so requests that had nothing to do
+with it start failing too. The failure spreads through the shared resource.
+
+## How it works
+
+- Give each dependency (or class of work) its **own** resource pool — separate
+  thread pools, connection pools, or concurrency limits — instead of one shared
+  pool for everything.
+- When one dependency gets slow and saturates **its** pool, only calls to *that*
+  dependency queue or fail. Everything else keeps its own capacity and stays
+  healthy.
+- The blast radius is contained to the compartment that flooded.
+
+## Bulkhead vs. circuit breaker
+
+They're complementary resilience patterns:
+
+- A **bulkhead** *limits how much* of your capacity any one dependency can consume.
+- A **circuit breaker** *stops calling* a dependency once it's clearly failing.
+
+Used together, the bulkhead contains the damage while the breaker cuts it off.
+
+## Trade-offs
+
+- **Contains failures** to one dependency and preserves capacity for the rest —
+  essential when a single flaky downstream could otherwise take everything down.
+- **Partitioning reduces peak efficiency**: reserved-but-idle capacity in one pool
+  can't be borrowed by a busy one. Sizing each compartment is the tuning cost.
+
+## Where you'll see it
+
+Separate connection/thread pools per dependency, concurrency limits in resilience
+libraries (Resilience4j, Polly), and per-service resource isolation in service
+meshes and Kubernetes.

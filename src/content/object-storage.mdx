@@ -1,0 +1,39 @@
+## The problem it solves
+
+User uploads, images, video, backups, static assets — this data is large, and it
+doesn't belong in your database or on an app server's local disk (which vanishes
+when the server is replaced). **Object storage** is built for exactly this:
+practically infinite, durable, cheap storage for **blobs**, each addressed by a key
+and served directly over HTTP.
+
+## How it works
+
+- Files are stored as **objects** (bytes + metadata) in **buckets**, each retrieved
+  by a unique key like `uploads/2026/cat.jpg`. It's a flat key–value store, not a
+  filesystem.
+- Objects are replicated across machines and zones for **very high durability**
+  (the classic "eleven nines" design goal).
+- It's the natural **origin for a CDN**: put storage behind a CDN and static assets
+  are cached at the edge, close to users.
+
+## Two patterns worth knowing
+
+- **Presigned upload URLs** — instead of routing a big file *through* your servers,
+  the app hands the client a short-lived, signed URL and the browser uploads
+  **directly to storage**. Your servers never touch the bytes, saving bandwidth and
+  load.
+- **Static website / asset hosting** — serve a whole front-end bundle straight from
+  a bucket + CDN, with no application server in the path at all.
+
+## Trade-offs
+
+- **Cheap, durable, effectively unbounded**, and offloads heavy data from your app
+  and database.
+- **Not a filesystem or a database**: no partial in-place edits, and only
+  eventual consistency for some operations historically. Listing and per-request
+  costs add up at scale, and **access control** (public vs. signed) needs care.
+
+## Where you'll see it
+
+Amazon S3, Google Cloud Storage, Azure Blob Storage, and S3-compatible stores like
+MinIO — almost always paired with a CDN.

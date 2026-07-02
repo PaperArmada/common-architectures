@@ -32,37 +32,61 @@ import { tokenAuth } from '../architectures/tokenAuth'
 import { oauth } from '../architectures/oauth'
 import { mtls } from '../architectures/mtls'
 import { waf } from '../architectures/waf'
+import { retry } from '../architectures/retry'
+import { bulkhead } from '../architectures/bulkhead'
+import { idempotency } from '../architectures/idempotency'
+import { eventSourcing } from '../architectures/eventSourcing'
+import { quorumConsensus } from '../architectures/quorumConsensus'
+import { twoPhaseCommit } from '../architectures/twoPhaseCommit'
+import { outbox } from '../architectures/outbox'
+import { dns } from '../architectures/dns'
+import { objectStorage } from '../architectures/objectStorage'
+import { bff } from '../architectures/bff'
+import { featureFlags } from '../architectures/featureFlags'
+import { stranglerFig } from '../architectures/stranglerFig'
 
 export const ARCHITECTURES: Architecture[] = [
   // Core web infrastructure
+  dns,
   loadBalancer,
   reverseProxy,
   cdn,
   apiGateway,
   caching,
   websockets,
+  objectStorage,
+  bff,
   // Data & scaling
   dbReplication,
   connectionPooling,
   sharding,
   cqrs,
+  eventSourcing,
+  quorumConsensus,
+  twoPhaseCommit,
   // Async & messaging
   messageQueue,
   pubSub,
   eventDriven,
   streamProcessing,
+  outbox,
   saga,
   // Distributed patterns
   microservices,
   serviceDiscovery,
   circuitBreaker,
   rateLimiting,
+  retry,
+  bulkhead,
+  idempotency,
   consistentHashing,
   leaderElection,
   // Deployment & delivery
   rollingDeploy,
   blueGreen,
   canary,
+  featureFlags,
+  stranglerFig,
   autoscaling,
   // Observability
   healthChecks,

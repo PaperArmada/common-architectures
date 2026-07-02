@@ -1,0 +1,38 @@
+## The problem it solves
+
+A client submits a payment. The request succeeds on the server, but the response
+is lost to a network timeout — so the client **retries**. Without protection, the
+customer is charged twice. Anywhere retries or at-least-once messaging exist,
+duplicates are inevitable. An operation is **idempotent** when doing it twice has
+the same effect as doing it once, and **idempotency keys** are how you make
+non-idempotent operations safe to repeat.
+
+## How it works
+
+- The client generates a unique **idempotency key** for the operation (a UUID) and
+  sends it with the request — and with every retry of that *same* logical request.
+- The server records the key alongside the result, atomically, the first time it
+  processes the request.
+- On a retry, the server **sees the key already exists** and returns the stored
+  result instead of performing the action again. The charge happens exactly once,
+  no matter how many times the client sends it.
+
+## Where it matters
+
+- **Payments and orders** — the canonical case; never double-charge.
+- **Message consumers** — queues deliver at-least-once, so handlers must dedupe by a
+  message/idempotency key to get **effectively-once** processing.
+- **Any retried write.** Reads are naturally idempotent; writes are the danger.
+
+## Trade-offs
+
+- Makes retries and redelivery **safe**, which is what unlocks aggressive retry and
+  at-least-once messaging in the first place.
+- Requires **storing keys** (with a TTL) and handling the race where two copies
+  arrive at once — the check-and-record must be atomic. Choosing the right key
+  (what makes two requests "the same") is the subtle part.
+
+## Where you'll see it
+
+Stripe's `Idempotency-Key` header, deduplicating queue consumers, and idempotent
+HTTP verbs (PUT/DELETE are idempotent by design; POST is not).

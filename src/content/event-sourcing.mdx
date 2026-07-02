@@ -1,0 +1,39 @@
+## The problem it solves
+
+A normal database stores the **current state** and overwrites it on every change —
+so the history is lost. You know an account balance is $40, but not how it got
+there. **Event sourcing** flips this: instead of storing state, you store the full,
+ordered sequence of **events** that happened (`Deposited $100`, `Withdrew $60`),
+append-only. Current state is just those events replayed. The log *is* the source
+of truth.
+
+## How it works
+
+- Every change is captured as an immutable **event** and appended to an **event
+  store**. Events are never updated or deleted.
+- To get current state, **replay** the events from the start, folding each one into
+  a running result. `$0 → +100 → -60 = $40`.
+- Replaying from scratch gets slow, so periodic **snapshots** capture state at a
+  point in time; you replay only the events since the last snapshot.
+
+## What it unlocks
+
+- **A complete audit log, for free** — every change, with its cause, is retained.
+  Invaluable for finance, compliance, and debugging.
+- **Time travel** — reconstruct the exact state at any past moment.
+- **New read models retroactively** — replay history into a brand-new view you
+  didn't know you needed when the events were written. This is why event sourcing
+  pairs so naturally with **CQRS**.
+
+## Trade-offs
+
+- **Full history, auditability, and flexible projections.**
+- A real **mindset shift** and added complexity: **event schema evolution** (old
+  events are immutable and must be readable forever), eventual consistency of read
+  models, and the fact that querying current state requires projections, not a
+  simple `SELECT`. **Overkill** for simple CRUD.
+
+## Where you'll see it
+
+Event stores like EventStoreDB and Kafka-as-log, banking/ledger systems, and
+Axon/Marten frameworks — almost always alongside CQRS.

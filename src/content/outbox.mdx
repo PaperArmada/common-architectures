@@ -1,0 +1,37 @@
+## The problem it solves
+
+A service commits an order to its database **and** needs to publish an
+`OrderPlaced` event to a message broker. These are **two different systems**, so
+there's no shared transaction — and that gap is a trap. Write the DB then publish,
+and a crash in between loses the event. Publish then write, and a crash leaves a
+phantom event for an order that never saved. This is the **dual-write problem**.
+The **transactional outbox** closes the gap.
+
+## How it works
+
+- In the **same local database transaction** as the business change, the service
+  also inserts the event into an **outbox table**. Because it's one transaction,
+  the order and its event commit **atomically** — both, or neither.
+- A separate **relay** process reads unpublished rows from the outbox and publishes
+  them to the broker, marking each as sent once the broker acknowledges.
+- If the relay crashes mid-publish, it simply re-reads and re-publishes — so events
+  are delivered **at-least-once** (consumers dedupe with idempotency keys).
+
+## Reading the outbox: polling vs. CDC
+
+- **Polling** — the relay periodically queries the outbox table for new rows.
+  Simple, with a little latency.
+- **Change Data Capture (CDC)** — tail the database's transaction log (e.g. with
+  Debezium) and stream new outbox rows out in near-real-time, no polling.
+
+## Trade-offs
+
+- **Guarantees** the event is published if and only if the business change
+  committed — the reliable backbone under event-driven systems and sagas.
+- Adds an outbox table and a relay to operate, and delivers **at-least-once**, so
+  downstream consumers must be **idempotent**.
+
+## Where you'll see it
+
+Debezium + Kafka Connect for CDC, framework support in Axon and micronaut, and the
+outbox tables behind most reliable event-driven microservices.
