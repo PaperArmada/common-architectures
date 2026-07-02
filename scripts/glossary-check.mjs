@@ -35,8 +35,10 @@ for (const m of gsrc.matchAll(/\{[^{}]*\}/g)) {
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const norm = (s) => s.toLowerCase().replace(/[\s-]+/g, ' ').trim()
 const phrasePattern = (p) => p.split(/[\s-]+/).map(escapeRe).join('[\\s-]+')
+const isAcronym = (p) => !/[a-z]/.test(p)
 const phraseToSlug = {}
-const phrases = []
+const ciPhrases = []
+const csPhrases = []
 const errors = []
 for (const t of terms) {
   for (const p of [t.term, ...t.aliases]) {
@@ -45,16 +47,35 @@ for (const t of terms) {
       errors.push(`Alias/term collision: "${p}" maps to both ${phraseToSlug[key]} and ${t.slug}`)
     }
     phraseToSlug[key] = t.slug
-    phrases.push(p)
+    ;(isAcronym(p) ? csPhrases : ciPhrases).push(p)
   }
 }
 const slugs = terms.map((t) => t.slug)
 for (const s of slugs) if (slugs.indexOf(s) !== slugs.lastIndexOf(s)) errors.push(`Duplicate slug: ${s}`)
-phrases.sort((a, b) => b.length - a.length)
-const TERM_RE = new RegExp(`\\b(${phrases.map(phrasePattern).join('|')})(?:es|s)?\\b`, 'gi')
+const byLenDesc = (a, b) => b.length - a.length
+const buildRe = (list, flags) =>
+  list.length
+    ? new RegExp(`\\b(${[...list].sort(byLenDesc).map(phrasePattern).join('|')})(?:es|s)?\\b`, flags)
+    : null
+const RE_CI = buildRe(ciPhrases, 'gi')
+const RE_CS = buildRe(csPhrases, 'g')
 const slugForMatch = (matched) => {
   const key = norm(matched)
   return phraseToSlug[key] ?? phraseToSlug[key.replace(/s$/, '')] ?? phraseToSlug[key.replace(/es$/, '')]
+}
+// Distinct slugs matched in a chunk of text, across both matchers.
+const slugsIn = (text) => {
+  const set = new Set()
+  for (const re of [RE_CI, RE_CS]) {
+    if (!re) continue
+    re.lastIndex = 0
+    let m
+    while ((m = re.exec(text))) {
+      const slug = slugForMatch(m[0])
+      if (slug) set.add(slug)
+    }
+  }
+  return set
 }
 
 // Strip code + heading lines so the scan matches what the linker actually sees.
@@ -76,16 +97,8 @@ for (const file of files) {
   const raw = readFileSync(join(CONTENT_DIR, file), 'utf8')
   const scan = stripForScan(raw)
 
-  const linked = new Set()
-  TERM_RE.lastIndex = 0
-  let m
-  while ((m = TERM_RE.exec(scan))) {
-    const slug = slugForMatch(m[0])
-    if (slug) {
-      linked.add(slug)
-      usedSlugs.add(slug)
-    }
-  }
+  const linked = slugsIn(scan)
+  for (const s of linked) usedSlugs.add(s)
   perFile.push({ file, count: linked.size })
 
   // Emphasized (**bold**) phrases that no glossary term covers → candidates.
@@ -93,8 +106,7 @@ for (const file of files) {
     const phrase = b[1].trim().replace(/[.:,;]+$/, '')
     if (phrase.length < 3 || phrase.length > 40) continue
     if (/^[A-Z][a-z]+:?$/.test(phrase)) continue // skip "Read:", "Write:" style labels
-    TERM_RE.lastIndex = 0
-    if (TERM_RE.test(phrase)) continue // already covered by a term
+    if (slugsIn(phrase).size) continue // already covered by a term
     const key = phrase.toLowerCase()
     emphasis.set(key, (emphasis.get(key) ?? 0) + 1)
   }

@@ -75,8 +75,18 @@ export function FeedbackWidget() {
     setOpen(false)
   }
 
-  const primaryLabel =
-    state === 'sending' ? 'Sending…' : state === 'sent' ? 'Sent ✓' : state === 'error' ? 'Failed — retry' : 'Send'
+  const hasEndpoint = Boolean(FEEDBACK_ENDPOINT)
+  const primaryLabel = hasEndpoint
+    ? state === 'sending'
+      ? 'Sending…'
+      : state === 'sent'
+        ? 'Sent ✓'
+        : state === 'error'
+          ? 'Failed — retry'
+          : 'Send'
+    : state === 'sent'
+      ? 'Saved ✓'
+      : 'Save note'
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
@@ -98,6 +108,15 @@ export function FeedbackWidget() {
             <p className="mt-1 text-[11px] text-ink-faint">
               On: <span className="text-ink-soft">{label}</span>
             </p>
+            {!hasEndpoint && (
+              <p className="mt-1 flex items-center gap-1 text-[10.5px] text-ink-faint">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Saved on this device — send it below.
+              </p>
+            )}
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}

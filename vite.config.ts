@@ -22,17 +22,26 @@ const phrasePattern = (p: string) =>
     .map(escapeRe)
     .join('[\\s-]+')
 
+// All-caps acronyms (no lowercase) must match case-sensitively, or short ones
+// like "HA"/"CA"/"ACID" would catch lowercase words ("ha", "has", "acid").
+const isAcronym = (p: string) => !/[a-z]/.test(p)
 const phraseToSlug: Record<string, string> = {}
-const phrases: string[] = []
+const ciPhrases: string[] = [] // case-insensitive (contain a lowercase letter)
+const csPhrases: string[] = [] // case-sensitive (all-caps acronyms)
 for (const t of GLOSSARY) {
   for (const p of [t.term, ...(t.aliases ?? [])]) {
     phraseToSlug[norm(p)] = t.slug
-    phrases.push(p)
+    ;(isAcronym(p) ? csPhrases : ciPhrases).push(p)
   }
 }
-phrases.sort((a, b) => b.length - a.length) // prefer longer matches in the alternation
+const byLenDesc = (a: string, b: string) => b.length - a.length
 // Trailing (?:es|s)? lets a term match its simple plural; lookup strips it back.
-const TERM_RE = new RegExp(`\\b(${phrases.map(phrasePattern).join('|')})(?:es|s)?\\b`, 'gi')
+const buildRe = (list: string[], flags: string) =>
+  list.length
+    ? new RegExp(`\\b(${[...list].sort(byLenDesc).map(phrasePattern).join('|')})(?:es|s)?\\b`, flags)
+    : null
+const RE_CI = buildRe(ciPhrases, 'gi')
+const RE_CS = buildRe(csPhrases, 'g')
 const slugForMatch = (matched: string): string | undefined => {
   const key = norm(matched)
   // Try exact, then de-pluralize: strip a single "s" (node→nodes) before "es"
@@ -49,27 +58,39 @@ function rehypeGlossary() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function linkify(value: string): any[] | null {
-      TERM_RE.lastIndex = 0
+      // Collect matches from both matchers, then emit non-overlapping links,
+      // first-occurrence-per-slug, left to right.
+      const found: { i: number; end: number; text: string; slug: string }[] = []
+      for (const re of [RE_CI, RE_CS]) {
+        if (!re) continue
+        re.lastIndex = 0
+        let m: RegExpExecArray | null
+        while ((m = re.exec(value))) {
+          const slug = slugForMatch(m[0])
+          if (slug) found.push({ i: m.index, end: m.index + m[0].length, text: m[0], slug })
+        }
+      }
+      if (!found.length) return null
+      found.sort((a, b) => a.i - b.i || b.end - b.i - (a.end - a.i))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let out: any[] | null = null
+      const out: any[] = []
       let last = 0
-      let m: RegExpExecArray | null
-      while ((m = TERM_RE.exec(value))) {
-        const matched = m[0]
-        const slug = slugForMatch(matched)
-        if (!slug || linked.has(slug)) continue
-        out = out ?? []
-        if (m.index > last) out.push({ type: 'text', value: value.slice(last, m.index) })
+      let used = false
+      for (const f of found) {
+        if (f.i < last || linked.has(f.slug)) continue
+        if (f.i > last) out.push({ type: 'text', value: value.slice(last, f.i) })
         out.push({
           type: 'element',
           tagName: 'a',
-          properties: { className: ['gloss-term'], href: `/glossary#${slug}` },
-          children: [{ type: 'text', value: matched }],
+          properties: { className: ['gloss-term'], href: `/glossary#${f.slug}` },
+          children: [{ type: 'text', value: f.text }],
         })
-        linked.add(slug)
-        last = m.index + matched.length
+        linked.add(f.slug)
+        last = f.end
+        used = true
       }
-      if (out && last < value.length) out.push({ type: 'text', value: value.slice(last) })
+      if (!used) return null
+      if (last < value.length) out.push({ type: 'text', value: value.slice(last) })
       return out
     }
 
