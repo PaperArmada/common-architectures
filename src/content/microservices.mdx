@@ -1,0 +1,42 @@
+## The problem it solves
+
+A **monolith** puts all functionality in one codebase and one deployable unit. That
+starts simple, but at scale it couples everything: one small change means
+redeploying the whole thing, teams step on each other, and you can't scale a hot
+feature without scaling all of it. **Microservices** split the system by business
+capability into independent services that are developed, deployed, and scaled on
+their own.
+
+## How it works
+
+- Each service owns a **single business capability** — Users, Orders, Payments —
+  and exposes an API.
+- Crucially, each service owns its **own database**. No shared tables; services
+  never reach into each other's data directly (**database per service**).
+- Clients reach services through an **API gateway** that handles routing and
+  cross-cutting concerns.
+
+## Talking between services
+
+When Orders needs a user's details, it makes a **network call** to the Users
+service — it can't do a database join across service boundaries. Those calls are
+sync (HTTP/gRPC) or async (events), and every one of them can be **slow or fail**,
+which shapes everything about the design.
+
+## Independent deployability & scaling
+
+The core payoff: deploy Orders without redeploying Users, and run ten copies of the
+hot service and one of the rest. Teams own their services end to end and ship on
+their own cadence.
+
+## Trade-offs
+
+- **Independent teams, deploys, and scaling**; clear ownership boundaries.
+- You've traded code complexity for **distributed-systems complexity**: network
+  failures, no cross-service transactions, eventual consistency, and much harder
+  debugging and testing. **Start with a monolith**; split when the seams are clear.
+
+## Where you'll see it
+
+Kubernetes-based platforms, service meshes (Istio, Linkerd), and gRPC/REST between
+services — usually fronted by an API gateway.

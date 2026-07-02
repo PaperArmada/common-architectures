@@ -1,0 +1,39 @@
+## The problem it solves
+
+As a system grows, wiring services together with direct calls creates a brittle
+web: each service must know the addresses, APIs, and quirks of the others, and one
+slow dependency stalls the whole chain. **Event-driven architecture** flips the
+flow of control — services announce **facts that have happened** (events) and
+other services **react**, without the emitter knowing who reacts.
+
+## How it works
+
+- A service does its job and emits an **event** to a shared **event bus** —
+  `OrderPlaced`, `PaymentCaptured`, `ItemShipped`.
+- Other services **subscribe** to the events they care about and react on their
+  own, emitting further events as they go.
+- The result is a **choreography**: a business process emerges from many small
+  reactions, with no central conductor calling each step.
+
+## Choreography vs. orchestration
+
+- **Choreography** (shown here) — each service knows only its own events; the flow
+  is emergent. Highly decoupled, easy to extend.
+- **Orchestration** — a central coordinator explicitly drives each step. Easier to
+  see and control, but reintroduces coupling.
+
+Many systems mix the two, and pair events with the **saga** pattern to coordinate
+multi-step workflows and their compensations (undo steps) across services.
+
+## Trade-offs
+
+- **Loose coupling** and independent evolution — add a reaction without touching
+  the emitter.
+- The end-to-end flow becomes **implicit** and harder to trace; you need good
+  observability (correlation IDs, event tracing). Everything is **eventually
+  consistent**.
+
+## Where you'll see it
+
+Kafka- or event-bus-based backends, AWS EventBridge, and systems built around
+**event sourcing**, where the log of events is itself the source of truth.

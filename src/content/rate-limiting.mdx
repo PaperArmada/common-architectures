@@ -1,0 +1,41 @@
+## The problem it solves
+
+A single aggressive client — a runaway script, a scraper, or an attacker — can
+flood your API with requests and starve everyone else, or run up your bill.
+**Rate limiting** caps how many requests a client may make in a given window,
+protecting the service and sharing capacity fairly.
+
+## Token bucket (the common algorithm)
+
+- Each client has a **bucket** that holds up to *N* tokens and **refills** at a
+  steady rate (say, 5 tokens, refilling 1/second).
+- Every request **spends one token**. Tokens available → the request passes.
+- **Bucket empty** → the request is rejected with **429 Too Many Requests**, often
+  with a `Retry-After` header telling the client when to try again.
+
+The bucket allows short **bursts** (up to its size) while enforcing a steady
+long-run average — usually what you want.
+
+## Other algorithms
+
+- **Fixed / sliding window** — count requests per time window; sliding avoids the
+  boundary spikes that fixed windows allow.
+- **Leaky bucket** — process requests at a constant drain rate, smoothing bursts
+  into a steady flow.
+
+## Where it runs
+
+Rate limiting usually lives at the **edge** — in the API gateway or a proxy —
+before requests reach your services. In a distributed setup the counters live in a
+**shared store** (like Redis) so every node enforces the same limit.
+
+## Trade-offs
+
+- **Protects** against abuse and overload and enforces **fairness** and quotas.
+- Adds a hot-path check and shared state; limits must be **tuned** so legitimate
+  bursts aren't punished. Always return **clear 429s** with `Retry-After`.
+
+## Where you'll see it
+
+NGINX and Envoy rate limiting, API gateways (Kong, AWS API Gateway), and
+Redis-backed limiters in application code.

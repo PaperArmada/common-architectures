@@ -1,0 +1,44 @@
+## The problem it solves
+
+Some data never stops: clicks, sensor readings, logs, transactions. Collecting it
+and running a batch job overnight is far too slow when you want live dashboards,
+fraud alerts, or up-to-the-second metrics. **Stream processing** handles data as a
+continuous, unbounded flow — computing results in near-real-time as events arrive.
+
+## How it works
+
+- Producers **append** events to a partitioned, append-only **log**. The log keeps
+  events **ordered** within a partition and **retains** them for a window of time.
+- One or more **stream processors** consume the log continuously, each tracking its
+  own **offset** (position) so consumers are independent.
+- The processor computes rolling results — often **windowed aggregations** (e.g.
+  "orders per 5 minutes") — and writes them to **sinks**: dashboards, alerts, or a
+  data lake.
+
+## Windows
+
+Because the stream is infinite, aggregations happen over **windows** of time:
+
+- **Tumbling** — fixed, non-overlapping buckets (every 5 minutes).
+- **Sliding** — overlapping buckets that advance smoothly.
+- **Session** — bounded by gaps of inactivity.
+
+Handling **late-arriving** events (a reading delayed by the network) is a core part
+of getting stream results correct.
+
+## Replay
+
+Because the log is retained rather than consumed-and-deleted, you can **rewind the
+offset** and reprocess history — to backfill a new metric or recover from a bug.
+The log is the durable source of truth; processors are replaceable readers.
+
+## Trade-offs
+
+- **Real-time** results, decoupled producers and consumers, and replayable history.
+- More moving parts than a queue, plus genuinely hard problems: ordering, exactly-
+  once semantics, and late data.
+
+## Where you'll see it
+
+Apache Kafka with Kafka Streams or Flink, Apache Pulsar, AWS Kinesis, and Spark
+Structured Streaming.

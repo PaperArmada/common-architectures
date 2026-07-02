@@ -1,0 +1,42 @@
+## The problem it solves
+
+Run several copies of a service for availability, and some jobs still need
+**exactly one** owner: a scheduler that must fire once, a primary that accepts
+writes, a coordinator that assigns work. If two nodes both think they're in charge
+— **split-brain** — you get duplicate actions or corrupted state. **Leader
+election** lets a cluster agree on a single leader, and pick a new one when it
+dies.
+
+## How it works
+
+- Nodes hold an **election**: a candidate asks its peers for **votes**.
+- A node that wins votes from a **quorum** — a strict majority of the cluster —
+  becomes the **leader** for a **term**.
+- Requiring a majority is what prevents split-brain: two leaders can't both hold a
+  majority at the same time.
+
+## Staying leader: heartbeats
+
+The leader periodically sends **heartbeats** to followers. As long as they arrive,
+followers stay followers. If heartbeats **stop** — the leader crashed or was
+partitioned away — a follower times out, starts a new term, and a fresh election
+begins. The cluster **self-heals** around the failure.
+
+## Why a majority
+
+With a quorum rule, a network partition can leave **at most one** side with a
+majority — so at most one leader exists. This is also why clusters use an **odd
+number** of nodes (3, 5): it maximizes the failures they can tolerate while still
+forming a majority.
+
+## Trade-offs
+
+- **Single, agreed coordinator** with automatic failover and no split-brain.
+- Requires a **consensus protocol** that is famously subtle to get right, and needs
+  a majority alive to make progress — a minority partition **stalls** rather than
+  risk inconsistency (a CAP trade-off favoring consistency).
+
+## Where you'll see it
+
+The **Raft** and **Paxos** protocols, and the systems built on them: etcd,
+ZooKeeper, and Consul — often used to elect leaders for *other* services.

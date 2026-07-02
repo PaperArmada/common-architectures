@@ -1,0 +1,40 @@
+## The problem it solves
+
+Some work is slow — sending email, encoding video, generating a report. Doing it
+inline makes the user wait, and a traffic spike can overwhelm whatever does the
+work. A **message queue** lets a producer hand off a job and move on; **workers**
+pick jobs up and process them at their own pace, on their own schedule.
+
+## How it works
+
+- The **producer** enqueues a job and immediately returns to the user — the slow
+  work happens later, out of the request path.
+- The **queue** buffers jobs durably, holding a backlog when work arrives faster
+  than it can be processed.
+- **Workers** (consumers) pull jobs off the queue and process them. Each job is
+  handled by **one** worker.
+
+## Two superpowers
+
+- **Load leveling** — a burst fills the queue; workers drain it steadily instead
+  of the system falling over. The queue absorbs the spike.
+- **Elastic throughput** — need to go faster? Add more workers. The queue spreads
+  jobs across whatever consumers are available.
+
+## Delivery & retries
+
+If a worker crashes mid-job, the job isn't **acknowledged**, so the queue
+redelivers it to another worker — **at-least-once** delivery. That means jobs can
+run more than once, so workers should be **idempotent**. A job that keeps failing
+is parked in a **dead-letter queue** for inspection.
+
+## Trade-offs
+
+- **Decouples** producers from consumers and smooths out load.
+- Adds a component to operate, and turns synchronous work **asynchronous** — the
+  caller learns the result later, not in the response.
+
+## Where you'll see it
+
+RabbitMQ, Amazon SQS, and Redis- or database-backed queues like Sidekiq and
+Celery.

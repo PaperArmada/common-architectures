@@ -57,10 +57,25 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </div>
 
-      <div className="mt-auto px-2 pt-4 text-[11px] leading-relaxed text-ink-faint">
-        Use <kbd className="rounded bg-surface-2 px-1">←</kbd>{' '}
-        <kbd className="rounded bg-surface-2 px-1">→</kbd> to step, {' '}
-        <kbd className="rounded bg-surface-2 px-1">space</kbd> to play.
+      <div className="mt-auto flex flex-col gap-2.5 px-2 pt-4">
+        <div>
+          <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+            Difficulty
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-ink-soft">
+            {(['intro', 'core', 'advanced'] as const).map((lvl) => (
+              <span key={lvl} className="flex items-center gap-1.5 capitalize">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: LEVEL_DOT[lvl] }} />
+                {lvl}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="text-[11px] leading-relaxed text-ink-faint">
+          <kbd className="rounded bg-surface-2 px-1">←</kbd>{' '}
+          <kbd className="rounded bg-surface-2 px-1">→</kbd> to step, {' '}
+          <kbd className="rounded bg-surface-2 px-1">space</kbd> to play.
+        </div>
       </div>
     </nav>
   )

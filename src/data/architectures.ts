@@ -7,6 +7,14 @@ import { dbReplication } from '../architectures/dbReplication'
 import { sharding } from '../architectures/sharding'
 import { connectionPooling } from '../architectures/connectionPooling'
 import { cqrs } from '../architectures/cqrs'
+import { messageQueue } from '../architectures/messageQueue'
+import { pubSub } from '../architectures/pubSub'
+import { eventDriven } from '../architectures/eventDriven'
+import { streamProcessing } from '../architectures/streamProcessing'
+import { microservices } from '../architectures/microservices'
+import { circuitBreaker } from '../architectures/circuitBreaker'
+import { rateLimiting } from '../architectures/rateLimiting'
+import { leaderElection } from '../architectures/leaderElection'
 
 export const ARCHITECTURES: Architecture[] = [
   // Core web infrastructure
@@ -19,6 +27,16 @@ export const ARCHITECTURES: Architecture[] = [
   connectionPooling,
   sharding,
   cqrs,
+  // Async & messaging
+  messageQueue,
+  pubSub,
+  eventDriven,
+  streamProcessing,
+  // Distributed patterns
+  microservices,
+  circuitBreaker,
+  rateLimiting,
+  leaderElection,
 ]
 
 export function getArchitecture(slug: string): Architecture | undefined {

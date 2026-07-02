@@ -1,0 +1,37 @@
+## The problem it solves
+
+When a downstream service gets slow or starts failing, naive callers keep sending
+requests and keep waiting. Threads and connections pile up on the caller, which
+then can't serve *its* callers — and the failure **cascades** upstream until the
+whole system is down. A **circuit breaker** wraps calls to a dependency and, once
+it looks unhealthy, **stops calling it** — failing fast instead of hanging.
+
+## The three states
+
+- **Closed (normal)** — calls flow through to the dependency. The breaker counts
+  failures.
+- **Open (tripped)** — once failures cross a threshold, the breaker opens. Calls
+  **fail immediately** without touching the dependency, giving it room to recover
+  and freeing the caller's resources.
+- **Half-open (testing)** — after a cooldown, the breaker lets a single **trial**
+  request through. Success → back to *closed*. Failure → back to *open*.
+
+## Failing fast, and gracefully
+
+Failing fast is only half the story — what does the caller return while the breaker
+is open? A good design pairs the breaker with a **fallback**: a cached value, a
+default, a queued retry, or a degraded-but-useful response. Better a slightly stale
+answer than a hung request.
+
+## Trade-offs
+
+- **Contains failures** and prevents them from cascading; lets a struggling
+  dependency recover.
+- Needs **tuning** — thresholds, timeouts, and cooldowns — and adds a state machine
+  to reason about. Works best alongside **timeouts**, **retries with backoff**, and
+  **bulkheads** (isolating resource pools).
+
+## Where you'll see it
+
+Resilience libraries like Resilience4j and Polly, and service meshes (Envoy, Istio)
+that provide circuit breaking at the infrastructure layer.

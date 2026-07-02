@@ -18,6 +18,8 @@ export const NODE_STYLES: Record<NodeKind, NodeStyle> = {
   cdn: { color: '#34d399', label: 'CDN edge' },
   queue: { color: '#c084fc', label: 'Queue' },
   storage: { color: '#34d399', label: 'Object storage' },
+  broker: { color: '#2dd4bf', label: 'Broker / topic' },
+  worker: { color: '#22d3ee', label: 'Worker' },
 }
 
 /** Compact stroke icons keyed by node kind. Rendered inside a 24×24 box. */
@@ -102,6 +104,25 @@ export function NodeIcon({ kind }: { kind: NodeKind }) {
         <svg {...common}>
           <path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3Z" />
           <path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7" />
+        </svg>
+      )
+    case 'broker':
+      // fan-out hub: one input, three outputs
+      return (
+        <svg {...common}>
+          <circle cx="5.5" cy="12" r="2" />
+          <circle cx="19" cy="5.5" r="1.9" />
+          <circle cx="19" cy="12" r="1.9" />
+          <circle cx="19" cy="18.5" r="1.9" />
+          <path d="M7.5 12h2M11 12l6-5.6M11 12h6M11 12l6 5.6" />
+        </svg>
+      )
+    case 'worker':
+      // gear
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="3.2" />
+          <path d="M12 3.5v2.2M12 18.3v2.2M4.6 12H2.4M21.6 12h-2.2M6.4 6.4 4.9 4.9M19.1 19.1l-1.5-1.5M17.6 6.4l1.5-1.5M4.9 19.1l1.5-1.5" />
         </svg>
       )
   }

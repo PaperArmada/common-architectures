@@ -1,0 +1,43 @@
+## The problem it solves
+
+One thing happens — an order is placed — and several parts of the system need to
+know: email, analytics, inventory, fraud checks. If the order service has to call
+each one directly, it's coupled to all of them, and adding a new consumer means
+changing the publisher. **Publish/subscribe** breaks that coupling: the publisher
+announces an event, and anyone interested receives it.
+
+## How it works
+
+- A **publisher** sends an event to a **topic** — never to a specific service. It
+  doesn't know or care who is listening.
+- The **broker** delivers a **copy of the event to every subscriber** of that
+  topic.
+- Each **subscriber** reacts independently and in parallel.
+
+## Fan-out vs. load-balancing
+
+This is the key distinction from a work queue:
+
+- **Pub/sub fans out** — *every* subscriber gets *every* message. One event, many
+  independent reactions.
+- **A work queue load-balances** — each message goes to *one* consumer, to share
+  the work.
+
+Some systems combine both: each subscriber is really a *group*, so the message
+fans out to every group and load-balances within each.
+
+## Adding consumers freely
+
+Because the publisher only knows the topic, you can add a new subscriber — say, a
+new recommendations service — **without touching the publisher**. This loose
+coupling is what makes event-based systems easy to extend.
+
+## Trade-offs
+
+- **Decoupled and extensible**, with natural one-to-many delivery.
+- Delivery is **asynchronous** and eventually consistent; you must reason about
+  ordering, duplicates, and subscribers that are temporarily down.
+
+## Where you'll see it
+
+Kafka topics, Google Pub/Sub, Redis Pub/Sub, NATS, and SNS fanning out to SQS.

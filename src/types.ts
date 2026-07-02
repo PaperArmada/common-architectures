@@ -13,6 +13,8 @@ export type NodeKind =
   | 'cdn'
   | 'queue'
   | 'storage'
+  | 'broker'
+  | 'worker'
 
 export interface DiagramNode {
   id: string
