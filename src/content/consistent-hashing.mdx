@@ -1,0 +1,36 @@
+## The problem it solves
+
+When you spread data across N servers with `hash(key) % N` — a cache cluster, a
+shard set, a load balancer with sticky routing — changing N is a disaster.
+Add or remove one server and **almost every key** now maps somewhere new, so the
+whole cache is invalidated at once and everything stampedes the database.
+**Consistent hashing** makes a membership change move only a **small fraction** of
+keys.
+
+## How it works
+
+- Imagine a **ring** of hash values (say 0 to 2³²). Place each **server** on the
+  ring at `hash(server)`.
+- Place each **key** on the ring at `hash(key)`, and assign it to the **first
+  server clockwise** from that point.
+- Add a server and it only steals the keys in the arc **between it and the previous
+  server** — everything else stays put. Remove one and its keys fall to the next
+  server clockwise. Only `~1/N` of keys move, not all of them.
+
+## Virtual nodes
+
+A few servers placed on the ring at random cluster unevenly, creating hotspots. So
+each physical server is placed at **many** points — **virtual nodes** — which
+smooths the distribution and makes rebalancing after a change more even.
+
+## Trade-offs
+
+- **Minimal reshuffling** on membership changes — the property that makes elastic
+  caches and shard sets practical.
+- More involved than modulo hashing, and getting balance right needs enough
+  **virtual nodes**. Keys can still skew if the key space itself is skewed.
+
+## Where you'll see it
+
+Memcached/Redis client-side sharding, Amazon Dynamo and Cassandra's partitioning,
+and content-aware load balancers.

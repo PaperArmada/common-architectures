@@ -1,0 +1,37 @@
+## The problem it solves
+
+In a microservices system, one user request fans out across many services. When it's
+slow, *which hop* caused it? Metrics say "checkout is slow"; logs are scattered
+across each service. **Distributed tracing** follows a single request end-to-end,
+showing every service it touched and how long each step took — turning "somewhere
+it's slow" into "the inventory call took 800ms."
+
+## How it works
+
+- When a request enters the system it's given a **trace ID**. Each unit of work
+  along the way — an HTTP call, a DB query — is a **span** with its own timing and a
+  link to its parent.
+- The trace ID (and parent span) is **propagated** in headers from service to
+  service, so every span records itself against the same trace.
+- A **tracing backend** collects the spans and reassembles them into a **waterfall**
+  — a timeline of the whole request showing exactly where the time went and where an
+  error occurred.
+
+## What it reveals
+
+The waterfall makes latency **visible**: sequential calls that should be parallel, a
+slow downstream dependency, an N+1 query storm, a retry loop. It's the tool that
+answers *why* a specific request was slow — the question metrics and logs can't
+directly answer.
+
+## Trade-offs
+
+- **End-to-end visibility** into request flow and latency across services — the
+  missing third pillar alongside metrics and logs.
+- Requires **instrumentation** and disciplined **context propagation** across every
+  service and library. High volume forces **sampling** (trace a fraction of
+  requests), so tracing complements, not replaces, always-on metrics.
+
+## Where you'll see it
+
+OpenTelemetry (the emerging standard), Jaeger, Zipkin, Tempo, and Datadog APM.

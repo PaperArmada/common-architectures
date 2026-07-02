@@ -20,6 +20,9 @@ export const NODE_STYLES: Record<NodeKind, NodeStyle> = {
   storage: { color: '#34d399', label: 'Object storage' },
   broker: { color: '#2dd4bf', label: 'Broker / topic' },
   worker: { color: '#22d3ee', label: 'Worker' },
+  shield: { color: '#f43f5e', label: 'Security / firewall' },
+  monitor: { color: '#a3e635', label: 'Monitoring' },
+  registry: { color: '#2dd4bf', label: 'Registry' },
 }
 
 /** Compact stroke icons keyed by node kind. Rendered inside a 24×24 box. */
@@ -123,6 +126,29 @@ export function NodeIcon({ kind }: { kind: NodeKind }) {
         <svg {...common}>
           <circle cx="12" cy="12" r="3.2" />
           <path d="M12 3.5v2.2M12 18.3v2.2M4.6 12H2.4M21.6 12h-2.2M6.4 6.4 4.9 4.9M19.1 19.1l-1.5-1.5M17.6 6.4l1.5-1.5M4.9 19.1l1.5-1.5" />
+        </svg>
+      )
+    case 'shield':
+      return (
+        <svg {...common}>
+          <path d="M12 3l7 3v5.5c0 4.2-3 7-7 8.5-4-1.5-7-4.3-7-8.5V6l7-3Z" />
+          <circle cx="12" cy="10.5" r="1.4" />
+          <path d="M12 11.9V14.5" />
+        </svg>
+      )
+    case 'monitor':
+      return (
+        <svg {...common}>
+          <rect x="3" y="4" width="18" height="14" rx="2" />
+          <path d="M6 13l3-4 2.2 3 2.3-4.2L17 13" />
+          <path d="M9 21h6M12 18v3" />
+        </svg>
+      )
+    case 'registry':
+      return (
+        <svg {...common}>
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <path d="M8 9h8M8 12.5h8M8 16h5" />
         </svg>
       )
   }

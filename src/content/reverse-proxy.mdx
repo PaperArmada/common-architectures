@@ -1,0 +1,37 @@
+## The problem it solves
+
+You don't want the public internet talking directly to your application servers.
+Something should sit in front — to present a single address, terminate
+encryption, serve static files, and hide your internal layout. A **reverse
+proxy** is that front door: clients connect to it, and it forwards requests to the
+right backend on their behalf.
+
+## What it does
+
+- **Single entry point** — one public address, whatever the backend topology.
+- **TLS termination** — decrypts HTTPS once at the edge, so backends can speak
+  plain HTTP internally and don't each need certificates.
+- **Static content & compression** — serves assets and gzips responses without
+  bothering the app.
+- **Routing** — sends `/api` to the app and `/` to a static bundle, based on path
+  or host.
+
+## Reverse proxy vs. the neighbors
+
+- A **forward proxy** sits in front of *clients* (outbound); a reverse proxy sits
+  in front of *servers* (inbound).
+- A **load balancer** is a reverse proxy specialized for spreading traffic across
+  identical backends. A reverse proxy is the general tool; load balancing, TLS,
+  and caching are features it may add.
+
+## Trade-offs
+
+- **Centralizes** TLS, routing, and static serving; shields and decouples backends
+  from clients.
+- It's another hop in the path and must be **highly available** — but it's cheap,
+  battle-tested, and nearly universal.
+
+## Where you'll see it
+
+NGINX, HAProxy, Caddy, Envoy, and Traefik — plus the ingress layer of virtually
+every web deployment.

@@ -1,0 +1,33 @@
+## The problem it solves
+
+Deploying by upgrading your live servers in place is risky: for a while the system
+is half-old, half-new, and if the release is bad you're scrambling to undo it while
+users suffer. **Blue-green deployment** keeps **two identical production
+environments** and flips traffic between them, so a release — and a rollback — is a
+single, instant switch.
+
+## How it works
+
+- **Blue** is the current live environment serving all traffic. **Green** is an
+  idle copy.
+- You deploy the new version to **green** and test it in a real production
+  environment while it takes **no live traffic**.
+- When you're satisfied, a **router or load balancer** flips all traffic from blue
+  to green in one move. Green is now live.
+- **Blue stays running**, untouched. If green misbehaves, you flip straight back —
+  rollback is instant.
+
+## Trade-offs
+
+- **Instant cutover and instant rollback**, and you get to smoke-test the new
+  version in production before it serves anyone.
+- Costs **double the infrastructure** during the switch, and needs care for
+  **stateful** pieces: in-flight requests, sessions, and especially **database
+  migrations**, which both versions must tolerate.
+- The switch is **all-or-nothing** — everyone moves at once. Want a gradual
+  rollout instead? That's a **canary**.
+
+## Where you'll see it
+
+Cloud load balancers with target-group swaps, DNS or router cutovers, and
+platform-native blue-green in Kubernetes, AWS, and Spinnaker.

@@ -1,0 +1,40 @@
+## The problem it solves
+
+You want "Log in with Google," or you want a third-party app to access *some* of a
+user's data — without ever handling their password or getting the keys to
+everything. **OAuth 2.0** is a protocol for **delegated authorization**: a user
+grants an application limited access to their account on another service, and the
+application receives a scoped **access token** instead of credentials. **OpenID
+Connect (OIDC)** adds an identity layer on top for "who is this user" — i.e. login.
+
+## The authorization code flow
+
+1. The app **redirects** the user to the provider (Google) with the scopes it wants.
+2. The user **authenticates and consents** directly with the provider — the app
+   never sees the password.
+3. The provider redirects back with a short-lived **authorization code**.
+4. The app exchanges that code — **server-to-server**, using its client secret — for
+   an **access token** (and often a refresh token and, with OIDC, an ID token).
+5. The app calls the resource API with the access token, scoped to only what the
+   user approved.
+
+The two-step "code then token" exchange keeps the token off the browser redirect;
+public clients add **PKCE** to secure it further.
+
+## Roles
+
+**Resource owner** (the user), **client** (the app), **authorization server**
+(issues tokens), **resource server** (the API). Keeping these separate is the whole
+idea.
+
+## Trade-offs
+
+- **No password sharing**, **scoped** and **revocable** access, and reusable login
+  across apps.
+- It's a genuinely **intricate** protocol with many flows and sharp edges;
+  implementing it yourself is error-prone. Use a vetted library or provider.
+
+## Where you'll see it
+
+"Sign in with Google/GitHub/Apple," Auth0, Okta, Keycloak, and virtually every
+third-party API integration.

@@ -1,0 +1,36 @@
+## The problem it solves
+
+Ordinary HTTPS (TLS) authenticates the **server** to the client — your browser
+checks the site's certificate, but the site doesn't cryptographically verify you.
+Inside a microservices system that's not enough: when Service A calls Service B, B
+needs to be sure the caller really *is* A, not something that slipped onto the
+network. **Mutual TLS (mTLS)** has **both** sides present certificates, so each
+proves its identity to the other.
+
+## How it works
+
+- Both services are issued **certificates** by a trusted internal **Certificate
+  Authority (CA)**.
+- On connection, the normal TLS handshake happens **and** the client also presents
+  its certificate. Each side verifies the other's cert against the CA.
+- Only if **both** identities check out does the encrypted connection proceed. Every
+  service-to-service call is now **mutually authenticated** and encrypted.
+
+## Zero-trust networking
+
+mTLS is a pillar of **zero-trust**: don't trust a request just because it came from
+inside the network. Identity is proven cryptographically on every hop, so a foothold
+on the network isn't enough to impersonate a service.
+
+## Trade-offs
+
+- **Strong, mutual, per-connection identity** plus encryption — no shared secrets to
+  leak, and it works below the application layer.
+- The hard part is **certificate lifecycle**: issuing, distributing, and especially
+  **rotating** certs across many short-lived services. Doing this by hand doesn't
+  scale — which is exactly why service meshes automate it.
+
+## Where you'll see it
+
+Service meshes (Istio, Linkerd) that inject mTLS transparently via sidecars,
+SPIFFE/SPIRE for workload identity, and internal CAs like Vault.

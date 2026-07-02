@@ -1,0 +1,36 @@
+## The problem it solves
+
+Plain HTTP is request/response: the client asks, the server answers, the
+connection closes. That's a poor fit for anything **live** — chat, notifications,
+collaborative editing, dashboards, game state — where the *server* needs to push
+data the moment it changes. **WebSockets** open a single long-lived, two-way
+connection so either side can send at any time.
+
+## How it works
+
+- The client makes an ordinary HTTP request with an **Upgrade** header. The server
+  agrees, and the same TCP connection is **upgraded** to the WebSocket protocol.
+- From then on the socket stays **open**, and both ends send **messages** whenever
+  they like — no new request per message, no polling.
+- Messages are small framed payloads, so latency and overhead are far lower than
+  repeatedly opening HTTP requests.
+
+## Compared to the alternatives
+
+- **Short polling** — ask every few seconds. Simple, but wasteful and laggy.
+- **Long polling** — hold a request open until there's news, then reconnect. Works
+  everywhere, but awkward.
+- **Server-Sent Events (SSE)** — a one-way server→client stream over HTTP. Great
+  for feeds; WebSockets win when you need **two-way**.
+
+## Trade-offs
+
+- **True real-time**, low-latency, bidirectional communication.
+- Connections are **stateful and long-lived**, which complicates scaling: a burst
+  means many open sockets, load balancers need sticky/sticky-aware routing, and
+  broadcasting across many server instances usually needs a shared pub/sub layer.
+
+## Where you'll see it
+
+Chat and presence systems, live dashboards, multiplayer games, and libraries like
+Socket.IO — with Redis pub/sub commonly fanning messages across instances.

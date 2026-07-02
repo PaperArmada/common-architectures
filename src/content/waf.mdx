@@ -1,0 +1,39 @@
+## The problem it solves
+
+Any service exposed to the internet is probed constantly — for SQL injection, XSS,
+path traversal, credential stuffing, and floods of junk traffic. You don't want
+every application to reimplement defenses against all of it. A **Web Application
+Firewall (WAF)** sits in front of your app and **inspects incoming HTTP requests**,
+blocking malicious ones before they ever reach your code.
+
+## How it works
+
+- The WAF sits at the **edge**, ahead of the application (often in the CDN or
+  reverse proxy).
+- It **inspects each request** — URL, headers, body, source — against a **rule set**:
+  known attack signatures (the OWASP Top 10), suspicious patterns, IP reputation, and
+  rate thresholds.
+- **Clean** requests pass through to the app. **Malicious** ones are **blocked**
+  (or challenged, e.g. with a CAPTCHA) at the edge, so the exploit attempt never
+  touches your service.
+
+## Rules, and their limits
+
+Rules come as managed **signature sets** (maintained for you) plus **custom rules**
+for your app. The eternal tension is **false positives** vs **false negatives**:
+too strict and you block real users; too loose and attacks slip through. Teams often
+run new rules in **"count/monitor" mode** first to see what they'd block before
+turning on enforcement.
+
+## Trade-offs
+
+- **Broad, centralized protection** against common web attacks and bots, with no
+  application changes — and a fast place to **virtually patch** a new CVE.
+- It's a **filter, not a fix** — defense in depth, not a substitute for secure code,
+  input validation, and parameterized queries. Adds a hop and needs tuning to avoid
+  blocking legitimate traffic.
+
+## Where you'll see it
+
+Cloudflare, AWS WAF, Akamai, and ModSecurity — usually bundled with CDN and DDoS
+protection at the edge.

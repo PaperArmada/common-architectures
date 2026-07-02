@@ -1,0 +1,35 @@
+## The problem it solves
+
+In a microservices system, instances come and go constantly — autoscaling,
+deploys, crashes, reschedules — and their addresses change every time. Hard-coding
+`orders-service = 10.0.3.14` breaks the moment that instance moves. **Service
+discovery** lets services find each other by **name**, resolving to whatever
+healthy instances currently exist.
+
+## How it works
+
+- Each instance **registers** itself with a **service registry** on startup —
+  "I'm `orders`, reachable at this address" — and **deregisters** on shutdown.
+- The registry **health-checks** instances and drops the ones that stop
+  responding, so it always reflects a live picture.
+- To call `orders`, a service **queries the registry** (or a proxy that does) and
+  gets back the current healthy addresses, then picks one.
+
+## Client-side vs. server-side
+
+- **Client-side discovery** — the caller queries the registry and load-balances
+  itself. Fewer hops, more logic in each service.
+- **Server-side discovery** — the caller hits a stable load balancer / proxy that
+  consults the registry. Simpler clients; the platform does the work (this is how
+  Kubernetes Services work).
+
+## Trade-offs
+
+- Instances can **move, scale, and fail freely** while callers keep using stable
+  names — the backbone that makes elastic microservices possible.
+- The registry is critical infrastructure that must itself be **highly available**
+  and **consistent** (it's often built on a consensus store like etcd).
+
+## Where you'll see it
+
+Consul, etcd, and ZooKeeper; Kubernetes DNS + Services; and Netflix Eureka.

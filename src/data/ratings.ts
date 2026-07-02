@@ -78,6 +78,27 @@ export const RATINGS: Record<string, Record<Lens, Tier>> = {
   'circuit-breaker': { conceptual: 1, operational: 1, prevalence: 1 },
   'rate-limiting': { conceptual: 1, operational: 1, prevalence: 1 },
   'leader-election': { conceptual: 2, operational: 2, prevalence: 0 }, // usually inside infra you use
+  // Gap-fillers
+  'reverse-proxy': { conceptual: 0, operational: 1, prevalence: 2 },
+  websockets: { conceptual: 1, operational: 1, prevalence: 1 }, // stateful conns to scale
+  'consistent-hashing': { conceptual: 2, operational: 1, prevalence: 1 },
+  'service-discovery': { conceptual: 1, operational: 1, prevalence: 1 },
+  saga: { conceptual: 2, operational: 2, prevalence: 0 },
+  // Deployment & delivery
+  'blue-green': { conceptual: 0, operational: 1, prevalence: 1 },
+  canary: { conceptual: 1, operational: 2, prevalence: 1 }, // needs metrics + automation
+  'rolling-deploy': { conceptual: 0, operational: 1, prevalence: 2 }, // k8s default
+  autoscaling: { conceptual: 1, operational: 1, prevalence: 1 },
+  // Observability
+  metrics: { conceptual: 0, operational: 1, prevalence: 2 },
+  logging: { conceptual: 0, operational: 1, prevalence: 2 },
+  tracing: { conceptual: 1, operational: 2, prevalence: 1 }, // instrumentation cost
+  'health-checks': { conceptual: 0, operational: 0, prevalence: 2 },
+  // Security & auth
+  'token-auth': { conceptual: 1, operational: 1, prevalence: 2 },
+  oauth: { conceptual: 2, operational: 1, prevalence: 1 }, // intricate protocol
+  mtls: { conceptual: 1, operational: 2, prevalence: 0 }, // cert lifecycle
+  waf: { conceptual: 0, operational: 1, prevalence: 1 },
 }
 
 export function tierFor(slug: string, lens: Lens): Tier {

@@ -1,0 +1,34 @@
+## The problem it solves
+
+You want to release a new version across a fleet of servers **without downtime** and
+**without doubling your infrastructure** the way blue-green does. A **rolling
+deployment** replaces instances **a few at a time**, so the service stays up
+throughout and you never need a whole second environment.
+
+## How it works
+
+- Instances sit behind a load balancer running version 1.
+- Take a **small batch** out of rotation, upgrade them to version 2, wait for their
+  **health checks** to pass, then return them to the load balancer.
+- Repeat batch by batch until the whole fleet is on version 2. Capacity dips only by
+  the batch size at any moment.
+- If a new batch comes up unhealthy, **stop the roll** — most of the fleet is still
+  on the good version.
+
+## The catch: mixed versions
+
+Mid-roll, v1 and v2 serve traffic **at the same time**. That's the defining
+constraint: changes must be **backward compatible** — API shapes and especially
+**database schemas** have to work for both versions at once (hence expand-then-
+contract migrations).
+
+## Trade-offs
+
+- **Zero downtime** with **no extra environment** — the common default.
+- Rollout and rollback are **gradual**, not instant (you roll forward or back batch
+  by batch), and the mixed-version window demands compatible changes.
+
+## Where you'll see it
+
+The default strategy for Kubernetes Deployments (`maxSurge` / `maxUnavailable`),
+and rolling updates in cloud autoscaling groups.

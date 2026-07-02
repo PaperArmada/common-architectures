@@ -1,0 +1,42 @@
+## The problem it solves
+
+Automated systems — load balancers, orchestrators, autoscalers — constantly make a
+simple decision: *should this instance receive traffic?* They can't guess; each
+instance has to **report whether it's actually able to serve**. **Health checks**
+are the standard endpoints that answer that question, and they're the quiet
+mechanism behind zero-downtime deploys, self-healing, and traffic that routes around
+failure.
+
+## How it works
+
+- Each instance exposes a **health endpoint** (e.g. `/healthz`). A checker probes it
+  on an interval.
+- **Pass** → the instance stays in rotation and keeps taking traffic.
+- **Fail** repeatedly → it's pulled from the load balancer, or the orchestrator
+  **restarts / replaces** it. When it passes again, it rejoins.
+
+## Liveness vs. readiness
+
+The distinction matters:
+
+- **Liveness** — "is this process alive?" Fail it and the orchestrator **restarts**
+  the instance (it's wedged and won't recover on its own).
+- **Readiness** — "is it ready to serve *right now*?" Fail it and the instance is
+  **removed from traffic** but not killed — used during startup, warm-up, or while a
+  dependency is briefly unavailable.
+
+A good check verifies the instance can actually do its job (can it reach its DB?)
+without being so strict that a blip restarts everything.
+
+## Trade-offs
+
+- The **foundation** of self-healing infrastructure and no-downtime rollouts —
+  failures are detected and routed around automatically.
+- Get the thresholds wrong and you cause harm: too sensitive → healthy instances
+  flap and restart; too lax → traffic keeps hitting a broken one. Deep checks that
+  call dependencies can also cause **cascading** failures.
+
+## Where you'll see it
+
+Kubernetes liveness/readiness/startup probes, load balancer health checks, and the
+`/healthz` convention across virtually every service.

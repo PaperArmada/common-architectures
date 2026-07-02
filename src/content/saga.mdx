@@ -1,0 +1,38 @@
+## The problem it solves
+
+A single business action — place an order — often spans several services: reserve
+inventory, charge payment, schedule shipping. In a monolith one **database
+transaction** would make all of it commit or roll back together. But each
+microservice owns its **own database**, so there is no shared transaction. A
+**saga** coordinates the steps as a sequence of local transactions, with
+**compensating actions** to undo them if something later fails.
+
+## How it works
+
+- The workflow is broken into steps, each a **local transaction** in one service
+  that emits an event when it's done.
+- The next step reacts and does its own local transaction, and so on down the
+  chain.
+- If a step **fails**, the saga runs **compensating transactions** — explicit
+  undo steps — for everything already done, in reverse: refund the payment, release
+  the inventory. There's no automatic rollback, so you design the undo yourself.
+
+## Two coordination styles
+
+- **Choreography** — services react to each other's events with no central brain.
+  Simple for short flows; hard to follow as they grow.
+- **Orchestration** — a central **saga orchestrator** tells each service what to do
+  and drives the compensations. Easier to see and control; one more component.
+
+## Trade-offs
+
+- Achieves **atomic-ish** multi-service workflows **without** distributed
+  transactions or two-phase commit.
+- You must design **idempotent** steps and **compensations** for every action, and
+  accept **eventual consistency** — the system passes through partial states before
+  settling. Debugging a stuck saga is real work.
+
+## Where you'll see it
+
+Orchestrators like Temporal, Camunda, and AWS Step Functions, and event-choreographed
+sagas on Kafka — usually paired with the **outbox** pattern for reliable events.

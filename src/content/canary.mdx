@@ -1,0 +1,36 @@
+## The problem it solves
+
+Even a well-tested release can fail in ways you only see under real traffic. Sending
+it to **everyone** at once turns a subtle bug into a full outage. A **canary
+release** exposes the new version to a **small slice** of users first, watches how
+it behaves, and only then rolls it out — or pulls it back before most people ever
+touch it.
+
+## How it works
+
+- The new version goes out to a **small percentage** of traffic (say 5%) — the
+  canary — while everyone else stays on the stable version.
+- You **watch its metrics**: error rate, latency, resource use, business signals,
+  compared against the stable baseline.
+- **Healthy?** Gradually shift more traffic — 5% → 25% → 50% → 100%.
+- **Unhealthy?** Route the canary's traffic back to stable. Only a small fraction of
+  users was ever affected, and the blast radius stayed tiny.
+
+## Automated analysis
+
+Mature setups make this a **progressive delivery** pipeline: the rollout controller
+promotes or aborts automatically based on metric thresholds, so a bad canary is
+rolled back in minutes without a human in the loop.
+
+## Trade-offs
+
+- **Limits the blast radius** of a bad deploy and gives real-world signal before
+  full rollout.
+- Requires **good metrics and traffic-splitting**, and both versions run at once —
+  so, like blue-green, schema and API changes must be **backward compatible**.
+- Slower than a straight cutover, by design.
+
+## Where you'll see it
+
+Service meshes (Istio, Linkerd) and ingress controllers for traffic splitting;
+Argo Rollouts, Flagger, and Spinnaker for automated canary analysis.

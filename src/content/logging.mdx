@@ -1,0 +1,36 @@
+## The problem it solves
+
+When you need to know **exactly what happened** for a specific request or error, you
+need the detail that metrics aggregate away. But that detail is scattered across
+dozens of servers, each with its own local files — and SSHing into machines to
+`grep` logs doesn't scale, especially when the machine has already been replaced by
+autoscaling. **Centralized logging** ships every log line to one searchable place.
+
+## How it works
+
+- Services write **structured logs** — ideally JSON with fields (`level`, `service`,
+  `request_id`, `message`) rather than free text — to stdout.
+- A **shipper/agent** on each host collects those lines and forwards them to a
+  central **log aggregator**, which indexes them.
+- Engineers **search and filter** across the whole fleet in one place: by service,
+  time range, error level, or a specific `request_id`.
+
+## Make logs correlatable
+
+The superpower is a **correlation ID** (request or trace ID) attached to every line
+a request produces, across every service it touches. Now one search reassembles the
+complete story of a single request as it moved through the system — turning a pile
+of lines into a narrative.
+
+## Trade-offs
+
+- **Full-fidelity detail** and powerful after-the-fact search — indispensable for
+  debugging specific incidents.
+- **Expensive** at scale (storage + indexing), so high-volume logs get **sampled**
+  or retention-limited. Logs are also unstructured-ish and noisy compared to
+  metrics; use metrics to detect, logs to investigate.
+
+## Where you'll see it
+
+The ELK/Elastic stack (Elasticsearch + Logstash/Fluentd + Kibana), Loki, Splunk,
+and cloud logging services.

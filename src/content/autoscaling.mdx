@@ -1,0 +1,37 @@
+## The problem it solves
+
+Traffic isn't constant — it has daily peaks, spikes, and quiet nights. Provision for
+the peak and you pay for idle machines most of the time; provision for the average
+and you fall over when it matters. **Autoscaling** adjusts the number of instances
+**automatically** to match current demand.
+
+## How it works
+
+- A **metric** is watched — CPU, request rate, queue depth, latency — against a
+  target (e.g. "keep CPU near 60%").
+- When the metric runs **hot**, the autoscaler **scales out**: it adds instances,
+  which register with the load balancer and start taking traffic.
+- When demand **falls**, it **scales in**, removing instances to save money.
+- A configured **min and max** bound the fleet so it can't scale to zero
+  unexpectedly or run away.
+
+## Reactive vs. proactive
+
+- **Reactive** scaling responds to load as it happens — simple, but new instances
+  take time to boot, so it lags sudden spikes.
+- **Scheduled / predictive** scaling grows the fleet *ahead* of a known peak (a
+  daily surge, a sale) so capacity is ready before the traffic arrives.
+
+## Trade-offs
+
+- **Elastic cost and capacity** — you pay for roughly what you use and absorb
+  spikes automatically.
+- Instances must be **stateless** and **quick to start**; slow boots blunt the
+  response. Beware **flapping** (scaling in and out repeatedly) — cooldowns help —
+  and watch that a scaled-out fleet doesn't just move the bottleneck to the
+  database.
+
+## Where you'll see it
+
+Kubernetes Horizontal Pod Autoscaler, AWS Auto Scaling Groups, and the autoscalers
+built into most serverless and container platforms.

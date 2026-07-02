@@ -1,0 +1,40 @@
+## The problem it solves
+
+HTTP is stateless — each request arrives with no memory of the last — yet your API
+needs to know *who* is calling on every single one. The old answer, a server-side
+**session**, means storing state and looking it up each time, which is awkward
+across many services and instances. **Token authentication** hands the client a
+signed token at login that it presents on each request, so any service can verify
+the caller **without a lookup**.
+
+## How it works (JWT)
+
+- The client logs in once with credentials. The server verifies them and returns a
+  **signed token** (commonly a **JWT**) containing claims — user ID, roles,
+  expiry — and a cryptographic signature.
+- The client sends that token on **every** subsequent request, in an
+  `Authorization: Bearer …` header.
+- Any service can **verify the signature** with the shared secret or public key and
+  trust the claims inside — **no database lookup, no shared session store**. That's
+  what makes it scale cleanly across services.
+
+## Sessions vs. tokens
+
+- **Sessions** — the server stores state; the cookie is just an ID. Easy to revoke
+  instantly, but requires a shared/sticky session store.
+- **Tokens** — the client carries the (signed) state; servers stay stateless. Great
+  for APIs and microservices, but a token is **valid until it expires** and is
+  hard to revoke early.
+
+## Trade-offs
+
+- **Stateless and scalable** — verification is local; no central session lookup.
+- **Revocation is the catch**: you can't easily invalidate a token before expiry,
+  so keep access tokens **short-lived** and pair them with a **refresh token**.
+  Never put secrets in a JWT — its payload is signed, not encrypted, so it's
+  readable by anyone.
+
+## Where you'll see it
+
+JWTs across API and microservice auth, OAuth 2.0 access tokens, and libraries that
+issue and verify them at the gateway.

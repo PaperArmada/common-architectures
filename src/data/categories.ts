@@ -21,6 +21,21 @@ export const CATEGORIES: CategoryMeta[] = [
     label: 'Distributed patterns',
     blurb: 'Coordination, resilience, and failure handling across services.',
   },
+  {
+    id: 'delivery',
+    label: 'Deployment & delivery',
+    blurb: 'Shipping new versions safely, and scaling to meet demand.',
+  },
+  {
+    id: 'observability',
+    label: 'Observability',
+    blurb: 'Knowing what your running system is actually doing.',
+  },
+  {
+    id: 'security',
+    label: 'Security & auth',
+    blurb: 'Authenticating requests and shielding services from abuse.',
+  },
 ]
 
 export const CATEGORY_LABEL: Record<string, string> = Object.fromEntries(

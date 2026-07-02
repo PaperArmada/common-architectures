@@ -1,0 +1,37 @@
+## The problem it solves
+
+You can't operate what you can't see. When latency creeps up or errors spike, you
+need to know **immediately** — not from an angry user. **Metrics** are cheap
+numeric time-series (request rate, error rate, latency percentiles, CPU, queue
+depth) that give you a continuous, quantified view of a system's health and drive
+**alerts** when something goes wrong.
+
+## How it works
+
+- Each service exposes **counters, gauges, and histograms** — requests served,
+  memory in use, latency distribution.
+- A **collector** gathers them over time, either by **scraping** each service's
+  metrics endpoint on an interval (pull) or receiving pushed samples.
+- Metrics land in a **time-series database**, where **dashboards** visualize trends
+  and **alerting rules** fire when a value crosses a threshold ("error rate > 2% for
+  5 minutes → page on-call").
+
+## The signals that matter
+
+Percentiles beat averages: **p95 / p99 latency** reveals the slow tail an average
+hides. Common framings include the **RED** method (Rate, Errors, Duration) for
+request-driven services and the **USE** method (Utilization, Saturation, Errors)
+for resources.
+
+## Trade-offs
+
+- **Cheap, always-on, and perfect for alerting** and spotting trends — low storage
+  cost even at high volume.
+- Metrics tell you **that** something is wrong and roughly where, but not **why** —
+  they're aggregates. To investigate a specific request you reach for **logs** and
+  **traces**. The three together are the "pillars of observability."
+- Watch **cardinality**: high-cardinality labels (like user ID) explode storage.
+
+## Where you'll see it
+
+Prometheus + Grafana, StatsD/Graphite, Datadog, and OpenTelemetry metrics.

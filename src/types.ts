@@ -15,6 +15,9 @@ export type NodeKind =
   | 'storage'
   | 'broker'
   | 'worker'
+  | 'shield'
+  | 'monitor'
+  | 'registry'
 
 export interface DiagramNode {
   id: string
@@ -66,7 +69,14 @@ export interface Step {
   annotations?: string[]
 }
 
-export type Category = 'core-web' | 'data-scaling' | 'async' | 'distributed'
+export type Category =
+  | 'core-web'
+  | 'data-scaling'
+  | 'async'
+  | 'distributed'
+  | 'delivery'
+  | 'observability'
+  | 'security'
 
 export interface Architecture {
   slug: string
