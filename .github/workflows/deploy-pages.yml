@@ -58,3 +58,8 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub's Pages backend queue can be slow (we've seen 5+ min in
+          # deployment_queued on healthy runs). Wait up to 20 min instead of
+          # failing at the 10-min default.
+          timeout: 1200000
