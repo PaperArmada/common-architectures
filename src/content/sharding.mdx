@@ -1,0 +1,45 @@
+## The problem it solves
+
+Replication scales *reads*, but every write still lands on a single primary — and
+eventually the data itself is too big, or the write load too high, for one
+machine. **Sharding** (horizontal partitioning) splits the data across many
+independent databases, so each **shard** holds only a slice and handles only that
+slice's traffic. Now writes scale horizontally: add shards, add capacity.
+
+## How it works
+
+- A **shard key** (e.g. `user_id`) decides which shard a row lives on, usually via
+  a hash of the key or a range.
+- A **router** (in the app, a proxy, or the database itself) sends each query to
+  the shard that owns its key.
+- A single-key lookup touches exactly **one shard**, so it stays fast no matter how
+  large the whole dataset grows.
+
+## Choosing a shard key
+
+This is the decision that makes or breaks a sharded system:
+
+- **Even distribution** — a good key spreads data and load uniformly. A bad one
+  creates **hotspots** where one shard does most of the work.
+- **Query alignment** — pick a key your common queries already filter on, so they
+  hit one shard instead of all of them.
+
+## The hard part: cross-shard operations
+
+- Queries that don't include the shard key must **fan out to every shard** and
+  merge results — slow and expensive.
+- **Joins and transactions across shards** are hard; systems often avoid them by
+  design.
+- **Rebalancing** when you add a shard means moving data. Techniques like
+  **consistent hashing** minimize how much has to move.
+
+## Trade-offs
+
+- **Scales writes and storage** essentially without limit.
+- Adds major **operational complexity** — reach for it only after replication and
+  caching aren't enough.
+
+## Where you'll see it
+
+Vitess (MySQL), Citus (PostgreSQL), MongoDB sharding, and the partitioning behind
+DynamoDB and Cassandra.

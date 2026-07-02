@@ -1,0 +1,39 @@
+## The problem it solves
+
+Databases are durable and flexible, but reading from one is comparatively slow —
+and the same hot data often gets read thousands of times. A **cache** is a small,
+fast, in-memory store that holds recently used data so most reads are served in
+microseconds without touching the database.
+
+## Cache-aside (the most common pattern)
+
+The application manages the cache explicitly:
+
+- **Read:** check the cache first.
+  - **Hit** → return the cached value. Done.
+  - **Miss** → read from the database, then **write the value into the cache** for
+    next time.
+- **Write:** update the database, then **invalidate or update** the cached entry
+  so it doesn't go stale.
+
+Because the cache is only populated on a miss, it naturally fills with exactly the
+data that's actually being read — the **working set**.
+
+## Keeping it fresh
+
+- A **TTL** expires entries after some time, bounding how stale a value can get.
+- On updates, **invalidate** the key so the next read repopulates it.
+- Phil Karlton's line holds: *there are only two hard things in computer science —
+  cache invalidation and naming things.*
+
+## Trade-offs
+
+- **Dramatically faster reads** and big **load reduction** on the database.
+- Introduces the risk of **stale reads** and a second system to reason about.
+- A **cold cache** (after a deploy or restart) briefly sends all traffic to the
+  database — beware the **thundering herd** on popular keys.
+
+## Where you'll see it
+
+Redis and Memcached in front of a database; also HTTP caches, and application-level
+memoization. Managed options include Amazon ElastiCache and Cloud Memorystore.

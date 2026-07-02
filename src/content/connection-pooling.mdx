@@ -1,0 +1,44 @@
+## The problem it solves
+
+Opening a database connection is surprisingly expensive: a TCP handshake, TLS
+negotiation, and authentication before a single query runs. Do that per request
+and you burn milliseconds every time. Worse, databases cap how many connections
+they'll accept — a burst of traffic can open thousands and the database starts
+**rejecting** connections. A **connection pool** keeps a small set of warm
+connections open and hands them out.
+
+## How it works
+
+- The pool opens a fixed number of connections to the database up front and keeps
+  them **warm**.
+- A request **borrows** a connection, runs its queries, and **returns** it to the
+  pool — the connection is reused, not closed.
+- If every connection is busy, the next request **waits briefly** for one to free
+  up, rather than opening a new one and overwhelming the database.
+
+## Why the cap matters
+
+A database's connection limit isn't arbitrary — each connection costs memory and,
+in some engines, a backend process. Pooling lets **hundreds of app requests**
+share **tens of database connections**, keeping the database comfortably under its
+ceiling.
+
+## Sizing the pool
+
+- **Too small** → requests queue up waiting for a connection under load.
+- **Too large** → you recreate the original problem, overloading the database.
+- A common starting point is a pool only a bit larger than your number of CPU
+  cores; measure and tune from there.
+
+## Trade-offs
+
+- **Removes per-request connection overhead** and protects the database from
+  connection storms.
+- Adds a component to run and size. In serverless/high-fan-out setups, an external
+  pooler is often essential because each instance would otherwise hold its own
+  connections.
+
+## Where you'll see it
+
+PgBouncer and Pgpool for PostgreSQL; HikariCP in the JVM; and the pools built into
+most ORMs and database drivers.

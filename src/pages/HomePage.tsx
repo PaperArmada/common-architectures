@@ -23,8 +23,8 @@ export function HomePage() {
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft">
           Clean, richly animated, step-by-step walkthroughs of the architectures behind real systems —
-          from load balancers to database replication. Step through each flow at your own pace and watch
-          requests, writes, and failures move through the system.
+          from load balancers and CDNs to sharding and CQRS. Step through each flow at your own pace and
+          watch requests, writes, and failures move through the system.
         </p>
       </motion.section>
 

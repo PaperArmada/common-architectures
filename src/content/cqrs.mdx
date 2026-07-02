@@ -1,0 +1,43 @@
+## The problem it solves
+
+Reads and writes often want opposite things. Writes want a **normalized** model
+with integrity constraints; reads want data **pre-joined and denormalized** so a
+page loads with one lookup. Serving both from one model forces a compromise that's
+optimal for neither. **CQRS** — Command Query Responsibility Segregation —
+separates the two: a **write model** for changes and a **read model** for queries.
+
+## How it works
+
+- **Commands** (writes) go through the write side into a normalized **write store**
+  — the source of truth, focused on correctness.
+- A **change feed** projects each write into one or more **read stores**, shaped
+  exactly for how they'll be queried (denormalized, precomputed, indexed).
+- **Queries** (reads) hit the read store directly — fast, no joins, no contention
+  with writes.
+
+## Scale each side independently
+
+Because the two paths are separate, you can scale them on their own terms: many
+cheap read replicas for a read-heavy workload, without touching the write side —
+and vice versa. Each side can even use a **different database** suited to its job.
+
+## The catch: eventual consistency
+
+The read store lags the write store by however long projection takes. A read
+right after a write may not reflect it yet. If a user must see their own change
+immediately, read from the write side for that case, or show an optimistic
+result.
+
+## Trade-offs
+
+- **Independently optimizable and scalable** read and write paths; great for
+  complex domains and read-heavy systems.
+- Significant **added complexity** — more stores, a projection pipeline, and
+  consistency to reason about.
+- **Overkill for simple CRUD.** Reach for it when read and write patterns genuinely
+  diverge; it pairs naturally with **event sourcing**.
+
+## Where you'll see it
+
+Event-driven systems built on Kafka or EventStore, and read models materialized
+into Elasticsearch, Redis, or denormalized SQL tables.

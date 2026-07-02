@@ -1,0 +1,36 @@
+## The problem it solves
+
+Your servers live in one region, but your users are everywhere. A request from
+the other side of the planet pays for every one of those thousands of miles,
+twice, on every asset. A **Content Delivery Network** puts copies of your static
+content in **edge locations** (points of presence) physically close to users, so
+most requests never travel to your origin at all.
+
+## How it works
+
+- Users are routed to their **nearest edge**, not to your origin.
+- On a **cache miss**, the edge fetches the asset from the origin once, stores it,
+  and serves it.
+- Every subsequent user in that region gets a **cache hit** — served straight
+  from the edge in a few milliseconds, with the origin never touched.
+
+## What to cache (and for how long)
+
+- **Static assets** — images, CSS, JS, video, fonts — are the classic fit.
+- A **TTL** (time to live) controls how long an edge serves a copy before
+  re-checking the origin. Long TTLs are fast but slow to update.
+- **Cache busting** (fingerprinted filenames like `app.9f2a.js`) lets you deploy
+  changes instantly while keeping long TTLs.
+
+## Trade-offs
+
+- **Slashes latency** for global users and **offloads huge traffic** from your
+  origin.
+- Best for content that's the same for everyone; **personalized or rapidly
+  changing** responses need care (short TTLs, or caching only at the origin).
+- **Invalidation is hard** — stale content at the edge is the classic footgun.
+
+## Where you'll see it
+
+Cloudflare, Amazon CloudFront, Fastly, Akamai — and the CDN features baked into
+most static-site hosts.

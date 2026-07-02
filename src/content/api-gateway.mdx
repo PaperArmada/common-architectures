@@ -1,0 +1,42 @@
+## The problem it solves
+
+Once a system is split into many services, a client that talked to one server now
+faces a dozen. Where does authentication happen? Rate limiting? Who knows which
+service owns `/orders`? An **API gateway** is a single front door: one address
+that authenticates, routes, and shapes every request before it reaches the
+services behind it.
+
+## How it works
+
+- Every client request hits the **gateway first** — clients never call individual
+  services directly.
+- The gateway handles **cross-cutting concerns** in one place: verifying auth
+  tokens, enforcing rate limits, logging, and TLS termination.
+- It then **routes** each request to the right service by path or host
+  (`/users → Users service`, `/orders → Orders service`).
+
+## Aggregation
+
+A single client screen often needs data from several services. Rather than making
+the client fire many calls, the gateway can **fan out**, call multiple services,
+and **combine** the responses into one — cutting round-trips, which matters most
+on mobile networks.
+
+## Trade-offs
+
+- **Centralizes** auth, throttling, and routing so each service doesn't
+  reimplement them.
+- Must be **highly available** — it's in the path of every request, so run it
+  redundantly.
+- Adds a network hop and can become a **bottleneck** or a place where too much
+  business logic accretes. Keep it thin.
+
+## Gateway vs. load balancer
+
+A load balancer spreads traffic across identical copies of one service (Layer 4).
+A gateway makes **application-level** decisions — routing by path, auth,
+aggregation (Layer 7). They're often used together.
+
+## Where you'll see it
+
+Kong, Amazon API Gateway, NGINX, Envoy, and the ingress layer in Kubernetes.
