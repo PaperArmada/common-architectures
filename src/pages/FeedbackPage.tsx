@@ -86,7 +86,7 @@ export function FeedbackPage() {
         <div className="mt-4 flex flex-col gap-3">
           <div>
             <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
-              Send these notes
+              Share these notes (your action — nothing automatic)
             </div>
             <div className="flex flex-wrap gap-2">
               <a
