@@ -1,0 +1,85 @@
+// A single, reviewable source of truth for how each architecture is rated —
+// across several *lenses*, because "difficulty" means different things:
+//   • conceptual  — how hard the idea is to understand
+//   • operational — how hard it is to run, tune, and keep alive in production
+//   • prevalence  — how often you'll actually meet it in real systems
+// The reader picks a lens; the dots + legend recolor to match.
+
+export type Lens = 'conceptual' | 'operational' | 'prevalence'
+
+/** Ordinal 0 → 1 → 2 (gentle/rare → demanding/common). Meaning is per-lens. */
+export type Tier = 0 | 1 | 2
+
+export interface LensMeta {
+  id: Lens
+  /** Short label for the segmented control. */
+  label: string
+  /** Title shown above the legend when this lens is active. */
+  legendTitle: string
+  /** Tooltip explaining the lens. */
+  blurb: string
+  /** Labels for tiers 0, 1, 2. */
+  tiers: [string, string, string]
+}
+
+export const LENSES: LensMeta[] = [
+  {
+    id: 'conceptual',
+    label: 'Concept',
+    legendTitle: 'Conceptual difficulty',
+    blurb: 'How hard the idea is to understand, cold.',
+    tiers: ['Intro', 'Core', 'Advanced'],
+  },
+  {
+    id: 'operational',
+    label: 'Ops',
+    legendTitle: 'Operational burden',
+    blurb: 'How hard it is to run, tune, and keep alive in production.',
+    tiers: ['Light', 'Moderate', 'Heavy'],
+  },
+  {
+    id: 'prevalence',
+    label: 'Prevalence',
+    legendTitle: 'How common it is',
+    blurb: "How often you'll actually meet it in real systems.",
+    tiers: ['Niche', 'Common', 'Ubiquitous'],
+  },
+]
+
+export const LENS_BY_ID: Record<Lens, LensMeta> = Object.fromEntries(
+  LENSES.map((l) => [l.id, l]),
+) as Record<Lens, LensMeta>
+
+/** Tier colors, shared across lenses (0 = green, 1 = indigo, 2 = pink). */
+export const TIER_COLOR: [string, string, string] = ['#34d399', '#818cf8', '#f472b6']
+
+/**
+ * Ratings per architecture. Conceptual mirrors each architecture's `level`;
+ * operational and prevalence are separate judgments (see the notes per row).
+ */
+export const RATINGS: Record<string, Record<Lens, Tier>> = {
+  // Core web infrastructure
+  'load-balancer': { conceptual: 0, operational: 1, prevalence: 2 },
+  cdn: { conceptual: 0, operational: 1, prevalence: 2 },
+  'api-gateway': { conceptual: 1, operational: 1, prevalence: 1 },
+  caching: { conceptual: 1, operational: 2, prevalence: 2 }, // invalidation/stampedes = heavy ops
+  // Data & scaling
+  'db-replication': { conceptual: 1, operational: 2, prevalence: 2 }, // failover, lag monitoring
+  'connection-pooling': { conceptual: 1, operational: 0, prevalence: 2 }, // mostly set-and-forget
+  sharding: { conceptual: 2, operational: 2, prevalence: 0 }, // only at real scale
+  cqrs: { conceptual: 2, operational: 2, prevalence: 0 },
+  // Async & messaging
+  'message-queue': { conceptual: 0, operational: 1, prevalence: 2 },
+  'pub-sub': { conceptual: 1, operational: 1, prevalence: 1 },
+  'event-driven': { conceptual: 2, operational: 2, prevalence: 1 }, // hard to trace
+  'stream-processing': { conceptual: 2, operational: 2, prevalence: 1 },
+  // Distributed patterns
+  microservices: { conceptual: 1, operational: 2, prevalence: 1 }, // the ops tax
+  'circuit-breaker': { conceptual: 1, operational: 1, prevalence: 1 },
+  'rate-limiting': { conceptual: 1, operational: 1, prevalence: 1 },
+  'leader-election': { conceptual: 2, operational: 2, prevalence: 0 }, // usually inside infra you use
+}
+
+export function tierFor(slug: string, lens: Lens): Tier {
+  return RATINGS[slug]?.[lens] ?? 1
+}

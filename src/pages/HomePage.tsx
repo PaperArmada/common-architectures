@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { CATEGORIES } from '../data/categories'
 import { architecturesByCategory } from '../data/architectures'
 import { NodeIcon, NODE_STYLES } from '../components/diagram/nodeStyles'
+import { LENS_BY_ID, tierFor, TIER_COLOR } from '../data/ratings'
+import { useLens } from '../context/LensContext'
 import type { Architecture } from '../types'
 
 export function HomePage() {
@@ -58,6 +60,10 @@ export function HomePage() {
 
 function ArchCard({ arch }: { arch: Architecture }) {
   const preview = arch.nodes.slice(0, 4)
+  const { lens } = useLens()
+  const tier = tierFor(arch.slug, lens)
+  const tierLabel = LENS_BY_ID[lens].tiers[tier]
+  const tierColor = TIER_COLOR[tier]
   return (
     <motion.div whileHover={{ y: -3 }} transition={{ type: 'spring', stiffness: 300, damping: 24 }}>
       <Link
@@ -77,8 +83,12 @@ function ArchCard({ arch }: { arch: Architecture }) {
               </span>
             )
           })}
-          <span className="ml-auto rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-            {arch.level}
+          <span
+            className="ml-auto flex items-center gap-1.5 rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide"
+            style={{ color: tierColor }}
+          >
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: tierColor }} />
+            {tierLabel}
           </span>
         </div>
         <h3 className="mt-4 text-base font-bold text-ink group-hover:text-white">{arch.title}</h3>

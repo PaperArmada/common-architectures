@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { getArchitecture } from '../data/architectures'
 import { CATEGORY_LABEL } from '../data/categories'
+import { LENSES, tierFor, TIER_COLOR } from '../data/ratings'
 import { StepPlayer } from '../components/StepPlayer'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -49,14 +50,38 @@ export function ArchitecturePage() {
                 <dd className="text-ink">{CATEGORY_LABEL[arch.category]}</dd>
               </div>
               <div>
-                <dt className="text-ink-faint">Level</dt>
-                <dd className="text-ink capitalize">{arch.level}</dd>
-              </div>
-              <div>
                 <dt className="text-ink-faint">Steps</dt>
                 <dd className="text-ink">{arch.steps.length}</dd>
               </div>
             </dl>
+
+            <div className="mt-4 border-t border-border pt-3">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-ink-faint">
+                Ratings
+              </div>
+              <dl className="flex flex-col gap-2 text-sm">
+                {LENSES.map((l) => {
+                  const tier = tierFor(arch.slug, l.id)
+                  return (
+                    <div key={l.id} className="flex items-center justify-between gap-2">
+                      <dt className="text-ink-faint" title={l.blurb}>
+                        {l.legendTitle}
+                      </dt>
+                      <dd
+                        className="flex items-center gap-1.5 font-medium"
+                        style={{ color: TIER_COLOR[tier] }}
+                      >
+                        <span
+                          className="h-1.5 w-1.5 rounded-full"
+                          style={{ background: TIER_COLOR[tier] }}
+                        />
+                        {l.tiers[tier]}
+                      </dd>
+                    </div>
+                  )
+                })}
+              </dl>
+            </div>
           </div>
         </aside>
       </div>

@@ -4,11 +4,13 @@ import { Sidebar } from './components/layout/Sidebar'
 import { HomePage } from './pages/HomePage'
 import { ArchitecturePage } from './pages/ArchitecturePage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { LensProvider } from './context/LensContext'
 
 export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
+    <LensProvider>
     <div className="mx-auto flex min-h-screen w-full max-w-[1400px]">
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 flex-none border-r border-border lg:block">
@@ -49,5 +51,6 @@ export default function App() {
         </main>
       </div>
     </div>
+    </LensProvider>
   )
 }
