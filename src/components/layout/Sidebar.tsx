@@ -2,7 +2,9 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CATEGORIES } from '../../data/categories'
 import { architecturesByCategory } from '../../data/architectures'
+import { JOURNEYS } from '../../data/journeys'
 import { LENS_BY_ID, tierFor, tierColor, severity } from '../../data/ratings'
+import { useJourneyProgress } from '../../lib/progress'
 import { useLens } from '../../context/LensContext'
 import { LensToggle } from './LensToggle'
 
@@ -53,6 +55,21 @@ export function Sidebar({
               </span>
             )
           })}
+        </div>
+      </div>
+
+      <div>
+        <NavLink
+          to="/journeys"
+          onClick={onNavigate}
+          className="mb-2 flex items-center gap-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-ink-faint transition hover:text-ink-soft"
+        >
+          Journeys
+        </NavLink>
+        <div className="flex flex-col gap-0.5">
+          {JOURNEYS.map((j) => (
+            <JourneySidebarLink key={j.slug} slug={j.slug} title={j.title} accent={j.accent} total={j.stages.length} onNavigate={onNavigate} />
+          ))}
         </div>
       </div>
 
@@ -127,5 +144,44 @@ export function Sidebar({
         </div>
       </div>
     </nav>
+  )
+}
+
+function JourneySidebarLink({
+  slug,
+  title,
+  accent,
+  total,
+  onNavigate,
+}: {
+  slug: string
+  title: string
+  accent: string
+  total: number
+  onNavigate?: () => void
+}) {
+  const done = useJourneyProgress(slug)
+  const count = done.size
+  return (
+    <NavLink
+      to={`/j/${slug}`}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        `group flex items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] transition ${
+          isActive ? 'bg-accent/15 text-ink' : 'text-ink-soft hover:bg-surface-2 hover:text-ink'
+        }`
+      }
+    >
+      <span
+        className="h-1.5 w-1.5 flex-none rounded-full"
+        style={{ background: accent, opacity: count > 0 ? 1 : 0.45 }}
+      />
+      <span className="min-w-0 flex-1 truncate">{title}</span>
+      {count > 0 && (
+        <span className="flex-none font-mono text-[10px] text-ink-faint">
+          {count >= total ? '✓' : `${count}/${total}`}
+        </span>
+      )}
+    </NavLink>
   )
 }

@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CATEGORIES } from '../data/categories'
 import { architecturesByCategory } from '../data/architectures'
+import { JOURNEYS } from '../data/journeys'
+import { JourneyCard } from '../components/JourneyCard'
 import { NodeIcon, NODE_STYLES } from '../components/diagram/nodeStyles'
 import { LENS_BY_ID, tierFor, tierColor, severity } from '../data/ratings'
 import { useLens } from '../context/LensContext'
@@ -29,6 +31,30 @@ export function HomePage() {
           from load balancers and CDNs to sharding and CQRS. Step through each flow at your own pace and
           watch requests, writes, and failures move through the system.
         </p>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.08 }}
+        className="pb-12"
+      >
+        <div className="mb-1 flex items-baseline justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-lg font-bold text-ink">Not sure where to start?</h2>
+            <span className="hidden text-sm text-ink-faint sm:inline">
+              Follow a journey — each stage hits a wall, then adds the pattern that fixes it.
+            </span>
+          </div>
+          <Link to="/journeys" className="flex-none text-sm font-medium text-accent hover:underline">
+            All journeys →
+          </Link>
+        </div>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          {JOURNEYS.map((j) => (
+            <JourneyCard key={j.slug} journey={j} />
+          ))}
+        </div>
       </motion.section>
 
       <div className="flex flex-col gap-10">

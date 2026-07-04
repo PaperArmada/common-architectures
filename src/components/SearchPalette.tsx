@@ -4,9 +4,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ARCHITECTURES } from '../data/architectures'
 import { CATEGORY_LABEL } from '../data/categories'
 import { GLOSSARY } from '../data/glossary'
+import { JOURNEYS } from '../data/journeys'
 
 interface Hit {
-  kind: 'pattern' | 'term'
+  kind: 'pattern' | 'term' | 'journey'
   title: string
   subtitle: string
   to: string
@@ -34,6 +35,11 @@ function search(query: string): Hit[] {
     )
     if (s > 0)
       hits.push({ kind: 'pattern', title: a.title, subtitle: a.tagline, to: `/a/${a.slug}`, score: s + 1 })
+  }
+  for (const j of JOURNEYS) {
+    const s = Math.max(scoreText(q, j.title) * 3, scoreText(q, j.tagline), scoreText(q, 'journey') * 2)
+    if (s > 0)
+      hits.push({ kind: 'journey', title: j.title, subtitle: j.tagline, to: `/j/${j.slug}`, score: s + 1 })
   }
   for (const t of GLOSSARY) {
     const s = Math.max(
@@ -137,7 +143,9 @@ export function SearchPalette({ open, onClose }: { open: boolean; onClose: () =>
                         className={`flex-none rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide ${
                           h.kind === 'pattern'
                             ? 'bg-accent/20 text-accent'
-                            : 'bg-surface-2 text-ink-faint'
+                            : h.kind === 'journey'
+                              ? 'bg-emerald-400/15 text-emerald-300'
+                              : 'bg-surface-2 text-ink-faint'
                         }`}
                       >
                         {h.kind}

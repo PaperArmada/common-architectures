@@ -1,7 +1,8 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { getArchitecture } from '../data/architectures'
 import { CATEGORY_LABEL } from '../data/categories'
+import { getJourney } from '../data/journeys'
 import { LENSES, tierFor, tierColor } from '../data/ratings'
 import { RELATED } from '../data/related'
 import { useLens } from '../context/LensContext'
@@ -11,6 +12,9 @@ import { NotFoundPage } from './NotFoundPage'
 export function ArchitecturePage() {
   const { slug } = useParams()
   const arch = slug ? getArchitecture(slug) : undefined
+  // Set when this page was reached from a journey stage — offer the way back.
+  const from = (useLocation().state ?? {}) as { journey?: string; stage?: number }
+  const journey = from.journey ? getJourney(from.journey) : undefined
 
   if (!arch) return <NotFoundPage />
   const Content = arch.content
@@ -23,6 +27,18 @@ export function ArchitecturePage() {
       transition={{ duration: 0.35 }}
       className="mx-auto max-w-5xl"
     >
+      {journey && (
+        <Link
+          to={`/j/${journey.slug}`}
+          className="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition hover:brightness-110"
+          style={{ borderColor: `${journey.accent}55`, background: `${journey.accent}14`, color: journey.accent }}
+        >
+          ← Back to journey: {journey.title}
+          {typeof from.stage === 'number' && (
+            <span className="font-mono opacity-70">stage {from.stage + 1}</span>
+          )}
+        </Link>
+      )}
       <div className="mb-1 flex items-center gap-2 text-xs">
         <Link to="/" className="text-ink-faint hover:text-ink-soft">
           Home
