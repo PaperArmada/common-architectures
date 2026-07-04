@@ -32,6 +32,8 @@ export interface JourneyStage {
   revealEdges?: string[]
   /** Edge ids retired from this stage on (e.g. client→server once a LB exists). */
   retireEdges?: string[]
+  /** Node ids removed from this stage on (e.g. the monolith once it's decomposed). */
+  retireNodes?: string[]
   /** Diagram emphasis while this stage is active. */
   scene: StageScene
 }
@@ -659,7 +661,514 @@ const dataEvents: Journey = {
   ],
 }
 
-export const JOURNEYS: Journey[] = [scaling, resilience, shipping, dataEvents]
+// ---------------------------------------------------------------------------
+// Journey 5 — One app becomes many
+// ---------------------------------------------------------------------------
+
+const decomposition: Journey = {
+  slug: 'one-app-many',
+  title: 'One app becomes many',
+  tagline: 'Breaking up the monolith — and paying the toll.',
+  blurb:
+    'Monoliths don’t fail because they’re slow; they fail because forty engineers can’t share one deploy train. This journey splits a monolith by capability, then meets every problem the split creates: services that can’t find each other, clients drowning in endpoints, frontends that need different shapes — and the honest, permanent cost of going distributed.',
+  accent: '#34d399',
+  nodes: [
+    { id: 'web', label: 'Web App', kind: 'client', x: 6, y: 26, width: 96 },
+    { id: 'mob', label: 'Mobile App', kind: 'client', x: 6, y: 74, width: 96 },
+    { id: 'mono', label: 'Monolith', kind: 'server', x: 28, y: 50, width: 104 },
+    { id: 'gw', label: 'API Gateway', kind: 'gateway', x: 28, y: 50, width: 110 },
+    { id: 'bffw', label: 'Web BFF', kind: 'server', x: 28, y: 18, width: 104 },
+    { id: 'bffm', label: 'Mobile BFF', kind: 'server', x: 28, y: 82, width: 104 },
+    { id: 'svc1', label: 'Orders', kind: 'server', x: 54, y: 18, width: 96 },
+    { id: 'svc2', label: 'Users', kind: 'server', x: 54, y: 50, width: 96 },
+    { id: 'svc3', label: 'Catalog', kind: 'server', x: 54, y: 82, width: 96 },
+    { id: 'reg', label: 'Registry', kind: 'registry', x: 78, y: 50, width: 104 },
+  ],
+  edges: [
+    { id: 'e-web-mono', from: 'web', to: 'mono' },
+    { id: 'e-mob-mono', from: 'mob', to: 'mono' },
+    { id: 'e-web-svc1', from: 'web', to: 'svc1' },
+    { id: 'e-mob-svc3', from: 'mob', to: 'svc3' },
+    { id: 'e-svc1-svc2', from: 'svc1', to: 'svc2' },
+    { id: 'e-s1-reg', from: 'svc1', to: 'reg', dashed: true },
+    { id: 'e-s2-reg', from: 'svc2', to: 'reg', dashed: true },
+    { id: 'e-s3-reg', from: 'svc3', to: 'reg', dashed: true },
+    { id: 'e-web-gw', from: 'web', to: 'gw' },
+    { id: 'e-mob-gw', from: 'mob', to: 'gw' },
+    { id: 'e-gw-svc1', from: 'gw', to: 'svc1' },
+    { id: 'e-gw-svc2', from: 'gw', to: 'svc2' },
+    { id: 'e-gw-svc3', from: 'gw', to: 'svc3' },
+    { id: 'e-web-bffw', from: 'web', to: 'bffw' },
+    { id: 'e-mob-bffm', from: 'mob', to: 'bffm' },
+    { id: 'e-bffw-svc1', from: 'bffw', to: 'svc1' },
+    { id: 'e-bffw-svc2', from: 'bffw', to: 'svc2' },
+    { id: 'e-bffm-svc2', from: 'bffm', to: 'svc2' },
+    { id: 'e-bffm-svc3', from: 'bffm', to: 'svc3' },
+  ],
+  stages: [
+    {
+      id: 'deploy-train',
+      title: 'Every team, one deploy train',
+      wall: 'Forty engineers share one codebase. A bug in reporting blocks the checkout team’s release; a search migration locks everyone’s tables. Shipping speed decays as headcount grows.',
+      fix: 'Split the monolith into services along capability lines — Orders, Users, Catalog — each with its own code, data, and deploy pipeline. Teams ship independently; a reporting bug can no longer block checkout. (The Shipping journey’s strangler fig shows how to make this split incrementally instead of big-bang.)',
+      archSlugs: ['microservices'],
+      reveals: ['web', 'mob', 'mono'],
+      revealEdges: ['e-web-mono', 'e-mob-mono'],
+      scene: {
+        activeNodes: ['mono'],
+        activeEdges: ['e-web-mono', 'e-mob-mono'],
+        packets: [
+          { from: 'web', to: 'mono', color: CLIENT },
+          { from: 'mob', to: 'mono', color: CLIENT, delay: 0.4 },
+        ],
+        annotations: ['1 codebase · 40 engineers · 1 deploy'],
+      },
+    },
+    {
+      id: 'finding',
+      title: 'Now the services must find each other',
+      wall: 'Orders needs to call Users — but with autoscaling and daily redeploys, instances appear and vanish by the minute. Hardcoded addresses break every day.',
+      fix: 'A service registry: every instance registers itself on boot and is health-checked; callers resolve a name — "users" — to a live instance at request time. The network map maintains itself as the fleet churns.',
+      archSlugs: ['service-discovery'],
+      reveals: ['svc1', 'svc2', 'svc3', 'reg'],
+      retireNodes: ['mono'],
+      revealEdges: ['e-web-svc1', 'e-mob-svc3', 'e-svc1-svc2', 'e-s1-reg', 'e-s2-reg', 'e-s3-reg'],
+      retireEdges: ['e-web-mono', 'e-mob-mono'],
+      scene: {
+        activeNodes: ['svc1', 'svc2', 'reg'],
+        activeEdges: ['e-s1-reg', 'e-svc1-svc2'],
+        packets: [
+          { from: 'svc1', to: 'reg', color: CLIENT, label: 'where is users?' },
+          { from: 'reg', to: 'svc1', color: OK, label: '10.0.3.7', delay: 0.6 },
+          { from: 'svc1', to: 'svc2', color: WARN, delay: 1.2 },
+        ],
+        annotations: ['instances register on boot'],
+      },
+    },
+    {
+      id: 'front-door',
+      title: 'Clients drown in endpoints',
+      wall: 'The web app now calls three services directly: three hostnames, three auth checks, CORS everywhere, retry logic living in the browser. Every new service makes every client heavier.',
+      fix: 'An API gateway gives clients one front door: a single endpoint that authenticates, rate-limits, and routes to the right service. Cross-cutting concerns get one implementation at the edge instead of one per client.',
+      archSlugs: ['api-gateway'],
+      reveals: ['gw'],
+      retireEdges: ['e-web-svc1', 'e-mob-svc3'],
+      revealEdges: ['e-web-gw', 'e-mob-gw', 'e-gw-svc1', 'e-gw-svc2', 'e-gw-svc3'],
+      scene: {
+        activeNodes: ['web', 'gw', 'svc1'],
+        activeEdges: ['e-web-gw', 'e-gw-svc1'],
+        packets: [
+          { from: 'web', to: 'gw', color: CLIENT, label: 'one endpoint' },
+          { from: 'gw', to: 'svc1', color: CLIENT, label: 'route', delay: 0.6 },
+        ],
+        annotations: ['auth · rate limit · route — once'],
+      },
+    },
+    {
+      id: 'bff',
+      title: 'One size fits nobody',
+      wall: 'Mobile wants tiny payloads over flaky networks; the web app wants rich, aggregated pages. The one-size-fits-all gateway API serves both badly — and every compromise ships to everyone.',
+      fix: 'Give each frontend its own backend: a Web BFF and a Mobile BFF, each owned by the client team that consumes it, each aggregating the same services into exactly the shape its client needs.',
+      archSlugs: ['bff'],
+      reveals: ['bffw', 'bffm'],
+      retireNodes: ['gw'],
+      revealEdges: ['e-web-bffw', 'e-mob-bffm', 'e-bffw-svc1', 'e-bffw-svc2', 'e-bffm-svc2', 'e-bffm-svc3'],
+      scene: {
+        activeNodes: ['web', 'mob', 'bffw', 'bffm'],
+        activeEdges: ['e-web-bffw', 'e-mob-bffm'],
+        packets: [
+          { from: 'bffw', to: 'web', color: OK, label: 'rich page' },
+          { from: 'bffm', to: 'mob', color: OK, label: 'lean JSON', delay: 0.5 },
+        ],
+        annotations: ['each client, its own shape'],
+      },
+    },
+    {
+      id: 'the-bill',
+      title: 'The distributed bill comes due',
+      wall: 'You traded one big problem for many small ones: a slow Users service now stalls every caller, and a single purchase touches three databases with no shared transaction.',
+      fix: 'This is the honest, permanent price of microservices — and the reason two other journeys exist. Resilience patterns contain cascading failures; sagas coordinate writes that span services. The split pays off only when the team pain it solves outweighs this complexity — which is why the monolith was the right day-one choice.',
+      archSlugs: ['circuit-breaker', 'saga'],
+      scene: {
+        activeNodes: ['web', 'mob', 'bffw', 'bffm', 'svc1', 'svc2', 'svc3', 'reg'],
+        packets: [
+          { from: 'web', to: 'bffw', color: CLIENT },
+          { from: 'bffw', to: 'svc1', color: CLIENT, delay: 0.4 },
+          { from: 'svc1', to: 'svc2', color: FAIL, label: 'slow…', delay: 0.9 },
+        ],
+        annotations: ['distributed by choice, not accident'],
+      },
+    },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Journey 6 — Locking the front door
+// ---------------------------------------------------------------------------
+
+const security: Journey = {
+  slug: 'locking-the-front-door',
+  title: 'Locking the front door',
+  tagline: 'From passwords-everywhere to zero trust.',
+  blurb:
+    'Security patterns layer like armor, and each layer answers a specific attack. This journey hardens one API from the inside out: stateless tokens instead of passwords on every request, delegated access for third-party apps, one enforcement point at the edge, a firewall for the hostile internet — and finally, no implicit trust even inside your own network.',
+  accent: '#fbbf24',
+  nodes: [
+    { id: 'client', label: 'Browser', kind: 'client', x: 6, y: 50, width: 96 },
+    { id: 'app', label: '3rd-party App', kind: 'worker', x: 8, y: 88, width: 110 },
+    { id: 'idp', label: 'Auth Server', kind: 'registry', x: 26, y: 12, width: 110 },
+    { id: 'waf', label: 'WAF', kind: 'shield', x: 26, y: 50, width: 96 },
+    { id: 'gw', label: 'API Gateway', kind: 'gateway', x: 46, y: 50, width: 110 },
+    { id: 'api', label: 'Orders API', kind: 'server', x: 70, y: 26, width: 104 },
+    { id: 'svc', label: 'Users API', kind: 'server', x: 70, y: 74, width: 104 },
+  ],
+  edges: [
+    { id: 'e-client-idp', from: 'client', to: 'idp' },
+    { id: 'e-client-api', from: 'client', to: 'api' },
+    { id: 'e-app-idp', from: 'app', to: 'idp', curve: -0.15 },
+    { id: 'e-app-api', from: 'app', to: 'api' },
+    { id: 'e-client-gw', from: 'client', to: 'gw' },
+    { id: 'e-app-gw', from: 'app', to: 'gw', curve: 0.25 },
+    { id: 'e-client-waf', from: 'client', to: 'waf' },
+    { id: 'e-waf-gw', from: 'waf', to: 'gw' },
+    { id: 'e-gw-idp', from: 'gw', to: 'idp', dashed: true },
+    { id: 'e-gw-api', from: 'gw', to: 'api' },
+    { id: 'e-gw-svc', from: 'gw', to: 'svc' },
+    { id: 'e-api-svc', from: 'api', to: 'svc' },
+  ],
+  stages: [
+    {
+      id: 'tokens',
+      title: 'Prove who you are — once',
+      wall: 'Every request carries the user’s password, and each server keeps session state — which breaks the moment you scale past one box.',
+      fix: 'Sign in once against an auth server and receive a signed token. Every request carries the token instead; any server verifies the signature statelessly — no shared session store, and the password crosses the wire exactly once.',
+      archSlugs: ['token-auth'],
+      reveals: ['client', 'idp', 'api'],
+      revealEdges: ['e-client-idp', 'e-client-api'],
+      scene: {
+        activeNodes: ['client', 'idp', 'api'],
+        activeEdges: ['e-client-idp', 'e-client-api'],
+        packets: [
+          { from: 'client', to: 'idp', color: CLIENT, label: 'login' },
+          { from: 'idp', to: 'client', color: OK, label: 'signed token', delay: 0.6 },
+          { from: 'client', to: 'api', color: WARN, label: 'request + token', delay: 1.3 },
+        ],
+        annotations: ['stateless: any server can verify'],
+      },
+    },
+    {
+      id: 'delegation',
+      title: 'Let apps in — without your password',
+      wall: 'A budgeting app wants read access to your data. The naive answer — hand it your password — grants everything, forever, and revoking it means changing your password everywhere.',
+      fix: 'OAuth issues the app its own scoped, revocable credential: you approve "read-only transactions" on the auth server, the app never sees your password, and you can cut its access any time without touching anything else.',
+      archSlugs: ['oauth'],
+      reveals: ['app'],
+      revealEdges: ['e-app-idp', 'e-app-api'],
+      scene: {
+        activeNodes: ['app', 'idp'],
+        activeEdges: ['e-app-idp', 'e-app-api'],
+        packets: [
+          { from: 'app', to: 'idp', color: CLIENT, label: 'consent flow' },
+          { from: 'idp', to: 'app', color: OK, label: 'scoped token', delay: 0.7 },
+          { from: 'app', to: 'api', color: WARN, label: 'read-only', delay: 1.4 },
+        ],
+        annotations: ['scoped · revocable · no password shared'],
+      },
+    },
+    {
+      id: 'one-door',
+      title: 'Enforce it in one place',
+      wall: 'Five services each reimplement token validation. Four do it correctly. The fifth is the breach — and you find out from the news.',
+      fix: 'Route everything through an API gateway that validates tokens, checks scopes, and rate-limits before traffic reaches any service. Services behind it accept only gateway traffic, so enforcement has exactly one implementation to audit.',
+      archSlugs: ['api-gateway'],
+      reveals: ['gw', 'svc'],
+      retireEdges: ['e-client-api', 'e-app-api'],
+      revealEdges: ['e-client-gw', 'e-app-gw', 'e-gw-idp', 'e-gw-api', 'e-gw-svc'],
+      scene: {
+        activeNodes: ['client', 'gw', 'api'],
+        activeEdges: ['e-client-gw', 'e-gw-api', 'e-gw-idp'],
+        packets: [
+          { from: 'client', to: 'gw', color: WARN, label: 'token' },
+          { from: 'gw', to: 'idp', color: CLIENT, label: 'verify', delay: 0.5 },
+          { from: 'gw', to: 'api', color: OK, label: 'authenticated', delay: 1.1 },
+        ],
+        annotations: ['one place to audit'],
+      },
+    },
+    {
+      id: 'shield',
+      title: 'Filter the hostile internet',
+      wall: 'The logs fill with /wp-admin probes, SQL injection attempts, and credential-stuffing storms — attacks that arrive before authentication even begins.',
+      fix: 'A web application firewall inspects requests at the very edge: known attack signatures, malformed payloads, and abusive sources are dropped before they touch the gateway. Defense in depth starts in front of the front door.',
+      archSlugs: ['waf'],
+      reveals: ['waf'],
+      retireEdges: ['e-client-gw'],
+      revealEdges: ['e-client-waf', 'e-waf-gw'],
+      scene: {
+        activeNodes: ['client', 'waf', 'gw'],
+        activeEdges: ['e-client-waf', 'e-waf-gw'],
+        packets: [
+          { from: 'client', to: 'waf', color: FAIL, label: "'; DROP TABLE —" },
+          { from: 'client', to: 'waf', color: CLIENT, label: 'legit request', delay: 0.8 },
+          { from: 'waf', to: 'gw', color: OK, label: 'passed', delay: 1.4 },
+        ],
+        annotations: ['blocked at the edge: SQLi, bots, stuffing'],
+      },
+    },
+    {
+      id: 'zero-trust',
+      title: 'Trust nothing inside, either',
+      wall: 'One leaked credential gives an attacker a foothold inside the perimeter — where service-to-service calls are unencrypted and unauthenticated. The hard shell has a soft center.',
+      fix: 'Mutual TLS gives every service its own certificate and requires both sides of every internal call to prove their identity — encrypted, authenticated, hop by hop. The perimeter stops being the only line of defense: zero trust.',
+      archSlugs: ['mtls'],
+      reveals: [],
+      revealEdges: ['e-api-svc'],
+      scene: {
+        activeNodes: ['gw', 'api', 'svc'],
+        activeEdges: ['e-gw-api', 'e-gw-svc', 'e-api-svc'],
+        packets: [
+          { from: 'api', to: 'svc', color: WARN, label: 'cert ⇄ cert' },
+          { from: 'svc', to: 'api', color: OK, label: 'verified both ways', delay: 0.8 },
+        ],
+        annotations: ['every hop: encrypt + verify'],
+      },
+    },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Journey 7 — The real-time web
+// ---------------------------------------------------------------------------
+
+const realtime: Journey = {
+  slug: 'real-time-web',
+  title: 'The real-time web',
+  tagline: 'From polling to pushing to two million sockets.',
+  blurb:
+    'Chat, live dashboards, multiplayer cursors — anything that must arrive now breaks the request/response habit. This journey builds a chat system: replace polling with pushed messages, survive tens of thousands of held-open connections, route between users on different servers, and tame the celebrity-sized fan-out that melts naive broadcasts.',
+  accent: '#22d3ee',
+  nodes: [
+    { id: 'ua', label: 'User A', kind: 'client', x: 6, y: 22, width: 96 },
+    { id: 'ub', label: 'User B', kind: 'client', x: 6, y: 78, width: 96 },
+    { id: 'rp', label: 'Reverse Proxy', kind: 'gateway', x: 28, y: 50, width: 116 },
+    { id: 'ws1', label: 'Socket Srv A', kind: 'server', x: 52, y: 22, width: 110 },
+    { id: 'ws2', label: 'Socket Srv B', kind: 'server', x: 52, y: 78, width: 110 },
+    { id: 'bus', label: 'Pub/Sub Bus', kind: 'broker', x: 76, y: 50, width: 110 },
+    { id: 'q', label: 'Fan-out Queue', kind: 'queue', x: 76, y: 12, width: 116 },
+  ],
+  edges: [
+    { id: 'e-ua-ws1', from: 'ua', to: 'ws1' },
+    { id: 'e-ua-rp', from: 'ua', to: 'rp' },
+    { id: 'e-ub-rp', from: 'ub', to: 'rp' },
+    { id: 'e-rp-ws1', from: 'rp', to: 'ws1' },
+    { id: 'e-rp-ws2', from: 'rp', to: 'ws2' },
+    { id: 'e-ws1-bus', from: 'ws1', to: 'bus' },
+    { id: 'e-ws2-bus', from: 'ws2', to: 'bus' },
+    { id: 'e-ws1-q', from: 'ws1', to: 'q' },
+    { id: 'e-q-bus', from: 'q', to: 'bus' },
+  ],
+  stages: [
+    {
+      id: 'push',
+      title: 'Stop asking, start listening',
+      wall: 'The chat app polls every two seconds: "anything new?" — "no." Thousands of clients hammer the API for nothing, and messages still arrive up to two seconds late.',
+      fix: 'A WebSocket upgrades the HTTP request into a persistent, two-way connection. The server pushes each message the instant it exists — no polling loop, no latency floor, and a fraction of the request load.',
+      archSlugs: ['websockets'],
+      reveals: ['ua', 'ws1'],
+      revealEdges: ['e-ua-ws1'],
+      scene: {
+        activeNodes: ['ua', 'ws1'],
+        activeEdges: ['e-ua-ws1'],
+        packets: [
+          { from: 'ua', to: 'ws1', color: CLIENT, label: 'upgrade ⇄ ws' },
+          { from: 'ws1', to: 'ua', color: OK, label: 'pushed instantly', delay: 0.8 },
+        ],
+        annotations: ['one connection, both directions'],
+      },
+    },
+    {
+      id: 'connections',
+      title: 'Ten thousand open connections',
+      wall: 'Persistent connections change the rules: each one is held for hours, TLS handshakes are expensive, and redeploying the socket server drops everyone at once.',
+      fix: 'A reverse proxy terminates TLS and holds the client connections, forwarding frames to socket servers behind it. Servers drain and redeploy while the proxy keeps clients connected — and connection load spreads across the pool.',
+      archSlugs: ['reverse-proxy'],
+      reveals: ['rp', 'ub', 'ws2'],
+      retireEdges: ['e-ua-ws1'],
+      revealEdges: ['e-ua-rp', 'e-ub-rp', 'e-rp-ws1', 'e-rp-ws2'],
+      scene: {
+        activeNodes: ['ua', 'ub', 'rp'],
+        activeEdges: ['e-ua-rp', 'e-ub-rp', 'e-rp-ws1', 'e-rp-ws2'],
+        packets: [
+          { from: 'ua', to: 'rp', color: CLIENT, label: '10k conns' },
+          { from: 'rp', to: 'ws1', color: CLIENT, delay: 0.5 },
+          { from: 'ub', to: 'rp', color: CLIENT, delay: 0.8 },
+          { from: 'rp', to: 'ws2', color: CLIENT, delay: 1.3 },
+        ],
+        annotations: ['TLS terminates here', 'drain servers, keep clients'],
+      },
+    },
+    {
+      id: 'backplane',
+      title: 'Your friend is on another server',
+      wall: 'User A’s socket lives on server A; user B’s lives on server B. A’s message reaches server A… and stops. Server A has no route to B’s socket.',
+      fix: 'A pub/sub backplane connects the socket servers: each publishes every message to the bus and subscribes on behalf of its own connected users. Any-to-any delivery — no server ever needs to know where a socket lives.',
+      archSlugs: ['pub-sub'],
+      reveals: ['bus'],
+      revealEdges: ['e-ws1-bus', 'e-ws2-bus'],
+      scene: {
+        activeNodes: ['ws1', 'ws2', 'bus'],
+        activeEdges: ['e-ws1-bus', 'e-ws2-bus'],
+        packets: [
+          { from: 'ua', to: 'rp', color: CLIENT, label: 'hi B!' },
+          { from: 'rp', to: 'ws1', color: CLIENT, delay: 0.4 },
+          { from: 'ws1', to: 'bus', color: WARN, label: 'publish', delay: 0.9 },
+          { from: 'bus', to: 'ws2', color: WARN, delay: 1.4 },
+          { from: 'ws2', to: 'ub', color: OK, label: 'delivered', delay: 1.9 },
+        ],
+        annotations: ['servers subscribe for their users'],
+      },
+    },
+    {
+      id: 'firehose',
+      title: 'When the room is on fire',
+      wall: 'A celebrity joins: one message now fans out to two million sockets at once. Naive broadcast melts the socket servers and floods slow clients.',
+      fix: 'Queue the fan-out: workers drain each broadcast at a controlled pace and coalesce bursts — "+3,041 reactions" instead of 3,041 messages. Per-connection rate limits keep one hot room from starving everyone else.',
+      archSlugs: ['message-queue', 'rate-limiting'],
+      reveals: ['q'],
+      revealEdges: ['e-ws1-q', 'e-q-bus'],
+      scene: {
+        activeNodes: ['ws1', 'q', 'bus'],
+        activeEdges: ['e-ws1-q', 'e-q-bus'],
+        packets: [
+          { from: 'ws1', to: 'q', color: WARN, label: 'broadcast job' },
+          { from: 'q', to: 'bus', color: WARN, label: 'paced fan-out', delay: 0.8 },
+          { from: 'bus', to: 'ws2', color: OK, label: '+3,041 ❤', delay: 1.4 },
+        ],
+        annotations: ['coalesce bursts', 'pace the flood'],
+      },
+    },
+  ],
+}
+
+// ---------------------------------------------------------------------------
+// Journey 8 — Agreeing when machines fail
+// ---------------------------------------------------------------------------
+
+const coordination: Journey = {
+  slug: 'agreeing-when-machines-fail',
+  title: 'Agreeing when machines fail',
+  tagline: 'Leader election, quorums, and the split-brain problem.',
+  blurb:
+    'The deepest problems in distributed systems are about agreement: which machine is in charge, and what officially happened. This journey starts with a double-charged billing run, builds up to majority consensus — the machinery inside etcd, ZooKeeper, and every replicated database — and shows why the minority side of a network split must go quiet.',
+  accent: '#fb923c',
+  nodes: [
+    { id: 'n1', label: 'Scheduler A', kind: 'server', x: 8, y: 18, width: 110 },
+    { id: 'n2', label: 'Scheduler B', kind: 'server', x: 8, y: 50, width: 110 },
+    { id: 'n3', label: 'Scheduler C', kind: 'server', x: 8, y: 82, width: 110 },
+    { id: 'lock', label: 'Lock Service', kind: 'registry', x: 36, y: 50, width: 110 },
+    { id: 'c1', label: 'Consensus A', kind: 'registry', x: 62, y: 18, width: 116 },
+    { id: 'c2', label: 'Consensus B', kind: 'registry', x: 62, y: 50, width: 116 },
+    { id: 'c3', label: 'Consensus C', kind: 'registry', x: 62, y: 82, width: 116 },
+  ],
+  edges: [
+    { id: 'e-n1-lock', from: 'n1', to: 'lock' },
+    { id: 'e-n2-lock', from: 'n2', to: 'lock' },
+    { id: 'e-n3-lock', from: 'n3', to: 'lock' },
+    { id: 'e-n1-c2', from: 'n1', to: 'c2' },
+    { id: 'e-n2-c2', from: 'n2', to: 'c2' },
+    { id: 'e-n3-c2', from: 'n3', to: 'c2' },
+    { id: 'e-c1-c2', from: 'c1', to: 'c2' },
+    { id: 'e-c2-c3', from: 'c2', to: 'c3' },
+    { id: 'e-c1-c3', from: 'c1', to: 'c3', curve: 0.35, dashed: true },
+  ],
+  stages: [
+    {
+      id: 'two-leaders',
+      title: 'Two schedulers, one job',
+      wall: 'For high availability you run the billing scheduler on two machines. One night both decide they’re in charge — and every customer is charged twice.',
+      fix: 'Leader election: the schedulers compete for a lease on a shared lock service. Exactly one wins and does the work; the others stand hot, watching. When the leader dies, its lease expires and a follower takes over within seconds — failover without double-fire.',
+      archSlugs: ['leader-election'],
+      reveals: ['n1', 'n2', 'n3', 'lock'],
+      revealEdges: ['e-n1-lock', 'e-n2-lock', 'e-n3-lock'],
+      scene: {
+        activeNodes: ['n1', 'lock'],
+        activeEdges: ['e-n1-lock', 'e-n2-lock'],
+        packets: [
+          { from: 'n1', to: 'lock', color: CLIENT, label: 'acquire lease' },
+          { from: 'lock', to: 'n1', color: OK, label: 'granted ♛', delay: 0.6 },
+          { from: 'n2', to: 'lock', color: FAIL, label: 'held — wait', delay: 1.1 },
+        ],
+        annotations: ['A leads · B, C stand by'],
+      },
+    },
+    {
+      id: 'quorum',
+      title: 'Who guards the guard?',
+      wall: 'The lock service is now the single point of failure — so it must be replicated too. But replicas can disagree: if both sides of a network hiccup grant the lease, you’re right back to two leaders.',
+      fix: 'Quorum consensus: the lock service becomes a cluster of three that commits a decision only when a majority — two of three — agree on it. No majority, no decision; disagreement becomes impossible by construction. This is the heart of Raft, Paxos, etcd, and ZooKeeper.',
+      archSlugs: ['quorum-consensus'],
+      reveals: ['c1', 'c2', 'c3'],
+      retireNodes: ['lock'],
+      retireEdges: ['e-n1-lock', 'e-n2-lock', 'e-n3-lock'],
+      revealEdges: ['e-n1-c2', 'e-n2-c2', 'e-n3-c2', 'e-c1-c2', 'e-c2-c3', 'e-c1-c3'],
+      scene: {
+        activeNodes: ['c1', 'c2', 'c3'],
+        activeEdges: ['e-c1-c2', 'e-c2-c3'],
+        packets: [
+          { from: 'c2', to: 'c1', color: WARN, label: 'propose: A leads' },
+          { from: 'c1', to: 'c2', color: OK, label: 'ack', delay: 0.7 },
+          { from: 'c2', to: 'c3', color: OK, label: 'committed (2/3)', delay: 1.3 },
+        ],
+        annotations: ['majority = 2 of 3'],
+      },
+    },
+    {
+      id: 'partition',
+      title: 'Surviving the split',
+      wall: 'A switch dies and Consensus C is cut off from A and B. If C kept granting leases on its own, you’d have two leaders again. So what actually happens?',
+      fix: 'The majority side — A and B — keeps deciding. C, unable to reach a quorum, refuses to decide anything and effectively goes read-only until the network heals. Losing availability on the minority side is the deliberate price of never losing correctness — the consistency-versus-availability trade-off you’ll meet everywhere.',
+      archSlugs: [],
+      scene: {
+        activeNodes: ['c1', 'c2'],
+        failedNodes: ['c3'],
+        activeEdges: ['e-c1-c2'],
+        packets: [
+          { from: 'c1', to: 'c2', color: OK, label: 'still 2/3 — decide' },
+          { from: 'c2', to: 'c3', color: FAIL, label: '✗ unreachable', delay: 0.8 },
+        ],
+        annotations: ['minority: stalls, stays safe'],
+      },
+    },
+    {
+      id: 'everywhere',
+      title: 'You’ve been using this all along',
+      wall: 'This machinery sounds exotic — three nodes voting about a crown. But you have been relying on it the whole time.',
+      fix: 'Every replicated database elects its primary exactly this way; service registries and configuration stores are consensus clusters; sharded systems coordinate rebalancing through them. Consensus is the quiet foundation under half the patterns in this library — now you know what’s holding them up.',
+      archSlugs: ['db-replication', 'service-discovery'],
+      scene: {
+        activeNodes: ['n1', 'n2', 'n3', 'c1', 'c2', 'c3'],
+        packets: [
+          { from: 'n1', to: 'c2', color: CLIENT, label: 'renew lease' },
+          { from: 'c2', to: 'c1', color: WARN, delay: 0.5 },
+          { from: 'c2', to: 'c3', color: WARN, delay: 0.7 },
+          { from: 'c2', to: 'n1', color: OK, label: '♛ confirmed', delay: 1.3 },
+        ],
+        annotations: ['the quiet foundation'],
+      },
+    },
+  ],
+}
+
+export const JOURNEYS: Journey[] = [
+  scaling,
+  resilience,
+  shipping,
+  dataEvents,
+  decomposition,
+  security,
+  realtime,
+  coordination,
+]
 
 export function getJourney(slug: string): Journey | undefined {
   return JOURNEYS.find((j) => j.slug === slug)

@@ -62,12 +62,17 @@ export function JourneyPage() {
     for (let i = 0; i <= index; i++) {
       const st = journey.stages[i]
       st.reveals?.forEach((n) => visibleNodes.add(n))
+      st.retireNodes?.forEach((n) => visibleNodes.delete(n))
       st.revealEdges?.forEach((e) => visibleEdges.add(e))
       st.retireEdges?.forEach((e) => visibleEdges.delete(e))
     }
     return {
       nodes: journey.nodes.filter((n) => visibleNodes.has(n.id)),
-      edges: journey.edges.filter((e) => visibleEdges.has(e.id)),
+      // An edge needs both endpoints on screen — retiring a node silently
+      // takes its edges with it.
+      edges: journey.edges.filter(
+        (e) => visibleEdges.has(e.id) && visibleNodes.has(e.from) && visibleNodes.has(e.to),
+      ),
     }
   }, [journey, index])
 
